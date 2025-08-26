@@ -12,6 +12,12 @@ dependencies = [
 
 ]
 
+[tool.poetry.group.journald]
+optional = true
+
+[tool.poetry.group.journald.dependencies]
+systemd-python = "^234"
+
 [tool.poetry]
 packages = [
   { include = "src" }
