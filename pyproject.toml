@@ -1,0 +1,25 @@
+[project]
+name = "radiosondedb"
+version = "0.1.0"
+description = "A tool for logging radiosonde flights received with radiosonde_auto_rx"
+authors = [
+  {name = "DB8LE",email = "db8le@darc.de"}
+]
+license = {text = "GPL-3.0-or-later"}
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+
+]
+
+[tool.poetry]
+packages = [
+  { include = "src" }
+]
+
+[tool.poetry.scripts]
+archiver = "src.archiver.main:main"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
