@@ -1,0 +1,6 @@
+[mariadb]
+user = "myuser" # Database username
+password = "superSecretPassword" # Password to database user
+host = "localhost" # IP address of the database host
+port = 3306 # MariaDB port. This is 3306 unless you've manually changed it
+database = "sondes" # Database name in MariaDB
