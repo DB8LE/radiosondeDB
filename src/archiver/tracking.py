@@ -59,7 +59,7 @@ class SondeTracker():
         # TODO: Calculate speed and heading
 
         database.add_to_tracking(packet)
-        print(f"Handling packet: {packet}")
+        logging.debug(f"Handling packet: {packet}")
 
         # Update latest packet time for rx timeout
         self.latest_packet_time = datetime.now(timezone.utc)

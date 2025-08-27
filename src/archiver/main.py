@@ -8,9 +8,10 @@ from typing import Dict, Any
 import mariadb
 
 def main():
-    rsdb.logging.set_up_logging(True, "rsdb_archiver") # Set up logging
-
+    rsdb.logging.set_up_logging("rsdb_archiver") # Set up logging
+    
     config = rsdb.config.read_config() # Read config
+    rsdb.logging.set_logging_config(config) # Set logging config
 
     # Check for high timeout and warn user
     rx_timeout_seconds = config["autorx"]["seconds_per_frame"] * config["archiver"]["rx_timeout_frames"]

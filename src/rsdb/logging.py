@@ -1,4 +1,5 @@
 import logging, platform, sys
+from typing import Dict, Any
 
 class CustomFormatter(logging.Formatter):
     """
@@ -42,30 +43,61 @@ def handle_uncaught(exc_type, exc_value, exc_tb):
     logging.log(logging.DEBUG, "Full traceback:", exc_info=(exc_type, exc_value, exc_tb))
     sys.exit(1)
 
-def set_up_logging(log_to_file: bool, app_name: str):
+_app_name = "N_A" # Internal variable used for storing the app name specified in set_up_logging
+
+def set_logging_config(config: Dict[str, Dict[str, Any]]):
+    """
+    Set additional logging settings according to the config file.
+    App name used for file name has to be specified in set_up_logging
+    """
+
+    global _app_name
+
+    # Get root logger
+    root_logger = logging.getLogger()
+
+    # Set stdout logging level
+    stdout_level = logging.DEBUG if config["logging"]["stdout_debug"] else logging.INFO
+    root_logger.handlers[0].setLevel(stdout_level)
+
+    # If enabled, set up logging to file
+    if config["logging"]["log_to_file"]:
+        file_handler = logging.FileHandler(_app_name+".log", mode="a", encoding="utf-8")
+        file_handler.setFormatter(CustomFormatter(use_color=False))
+
+        # Set debug level if enabled
+        file_log_level = logging.DEBUG if config["logging"]["file_debug"] else logging.INFO
+        file_handler.setLevel(file_log_level)
+
+        root_logger.addHandler(file_handler)
+
+    # Set journal logger to debug if enabled
+    if (len(root_logger.handlers) == 2) and config["logging"]["journal_debug"]:
+        journal_level = logging.DEBUG if config["logging"]["journal_debug"] else logging.INFO
+        root_logger.handlers[1].setLevel(journal_level) # Janky but the journal handler should always be second
+
+def set_up_logging(app_name: str):
     """
     Set up the loggging system.
     log_to_file: wether to log to a file or not (named <app_name>.log)
     app_name: the name of the current program
     """
 
+    global _app_name
+    _app_name = app_name
+
     # Set exceptions to be handeled by custom function
     sys.excepthook = handle_uncaught
 
     # Get root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(logging.DEBUG)
 
     # Logging handler to log to stdout
     stdout_handler = logging.StreamHandler(sys.stdout)
     stdout_handler.setFormatter(CustomFormatter())
+    stdout_handler.setLevel(logging.INFO)
     root_logger.addHandler(stdout_handler)
-
-    # Optionally set up logging to a file
-    if log_to_file:
-        file_handler = logging.FileHandler(app_name+".log", mode="a", encoding="utf-8")
-        file_handler.setFormatter(CustomFormatter(use_color=False))
-        root_logger.addHandler(file_handler)
 
     # On linux, try to set up logging to the systemd journal
     if platform.system() == "Linux":
@@ -73,6 +105,7 @@ def set_up_logging(log_to_file: bool, app_name: str):
             from systemd.journal import JournalHandler
 
             journal_handler = JournalHandler(SYSLOG_IDENTIFIER=app_name)
+            journal_handler.setLevel(logging.INFO)
             root_logger.addHandler(journal_handler)
         except ImportError:
             logging.info("Failed to import python systemd module. Logging to the journal will be disabled. To install journald support, run poetry install with --with journald")
