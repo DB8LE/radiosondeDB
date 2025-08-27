@@ -43,7 +43,11 @@ def main():
         while True:
             try: # Got data, update sondes and timeouts
                 data = udp_socket.recv(1024)
-                tracking.process_packet(json.loads(data), database, config["archiver"]["min_frames"], rx_timeout_seconds)
+
+                packet = rsdb.Packet().from_json(data)
+                if packet != None: # If packet isn't payload summary, dont process
+                    tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout_seconds)
+                
                 tracking.update_timeouts()
             except socket.timeout: # No data from AutoRX, only update timeouts
                 tracking.update_timeouts()

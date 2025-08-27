@@ -1,3 +1,4 @@
+import src.rsdb as rsdb
 from . import database
 
 import logging
@@ -18,9 +19,9 @@ class SondeTracker():
         self.total_frames = 0
         self.latest_packet_time = datetime.now(timezone.utc)
 
-        self.latest_packet: Dict[str, Any]
-        self.first_packet: Dict[str, Any]
-        self.burst_packet: None | Dict[str, Any] = None
+        self.latest_packet: rsdb.Packet
+        self.first_packet: rsdb.Packet
+        self.burst_packet: None | rsdb.Packet = None
 
     def close(self):
         """Close tracker specific cursor and remove self from tracked list"""
@@ -49,11 +50,13 @@ class SondeTracker():
 
             self.close()
 
-    def handle_packet(self, packet: Dict[str, Any]):
+    def handle_packet(self, packet: rsdb.Packet):
         """Handle a packet received via UDP from AutoRX"""
 
         self.total_frames += 1
         self.latest_packet = packet
+
+        # TODO: Calculate speed and heading
 
         database.add_to_tracking(packet)
         print(f"Handling packet: {packet}")
@@ -63,16 +66,11 @@ class SondeTracker():
 
 tracked_sondes: Dict[str, SondeTracker] = {} # Dict to store currently tracked sondes by their serials with the corresponding handler
 
-def process_packet(packet: Dict[str, Any], db_conn: mariadb.Connection, min_frames: int, rx_timeout_seconds: int):
+def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames: int, rx_timeout_seconds: int):
     """Process packet from AutoRX by passing it to sonde specific handlers"""
-    
-    # Ensure packet is a payload summary
-    if packet["type"] != "PAYLOAD_SUMMARY":
-        return
-    logging.debug("Got payload summary")
 
     # Check if sonde is already being tracked
-    sonde_serial = packet["callsign"]
+    sonde_serial = packet.serial
     if sonde_serial not in tracked_sondes: # If no, do checks and add to tracked list
         # Check if sonde is already in DB (reception picked back up after timeout)
         query = "SELECT EXISTS (SELECT 1 FROM tracking WHERE serial = '?') AS value_exists;"
