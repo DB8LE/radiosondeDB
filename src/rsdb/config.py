@@ -38,6 +38,6 @@ def read_config() -> Dict[str, Any]:
 
             if _extract_toml_keys(_config_data) != _extract_toml_keys(config_example_data):
                 logging.error("Config file contains unexpected keys. Either the config file or the example config file contain invalid keys.")
-                exit()
+                exit(1)
 
     return _config_data

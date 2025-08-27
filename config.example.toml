@@ -1,6 +1,20 @@
+# General settings
 [mariadb]
 user = "myuser" # Database username
 password = "superSecretPassword" # Password to database user
 host = "localhost" # IP address of the database host
 port = 3306 # MariaDB port. This is 3306 unless you've manually changed it
 database = "sondes" # Database name in MariaDB
+
+[autorx]
+port = 55673 # UDP port that autorx sends its payload summaries to
+seconds_per_frame = 5 # How many seconds are between payload summaries. This is defined in autorx config as `ozi_update_rate`
+
+# Application specific settings
+[archiver]
+min_frames = 60 # Minimum amount of frames that need to be received via UDP for the flight to not be discarded
+                # Keep in mind that the default autorx setting it to only send a payload summary for every 5 received frames
+rx_timeout_frames = 60 # The amount of frames that need to be missed to stop reception of a specific sonde
+                       # After reception for a sonde has been stopped due to timeout, archival will not continue, even if
+                       # reception is regained to avoid long pauses between packets. Similar behaviour can still be configured
+                       # if this option is set to a high value
