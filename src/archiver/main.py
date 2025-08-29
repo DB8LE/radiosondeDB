@@ -5,8 +5,6 @@ import logging, socket, json, traceback
 from datetime import datetime, timezone
 from typing import Dict, Any
 
-import mariadb
-
 def main():
     rsdb.logging.set_up_logging("rsdb_archiver") # Set up logging
     
@@ -25,7 +23,7 @@ def main():
 
     # Connect to DB
     logging.info("Connecting to MariaDB")
-    database = mariadb.connect(**config["mariadb"])
+    database = rsdb.database.connect(config)
 
     # Set up main listener
     logging.info("Setting up AutoRX UDP listener")
@@ -52,6 +50,8 @@ def main():
                 tracking.update_timeouts()
             except socket.timeout: # No data from AutoRX, only update timeouts
                 tracking.update_timeouts()
+
+            database.commit()
     except KeyboardInterrupt:
         logging.info("Got keyboard interrupt, shutting down..")
 
