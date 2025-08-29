@@ -1,7 +1,7 @@
 import src.rsdb as rsdb
 from . import database
 
-import logging
+import logging, traceback
 from datetime import datetime, timezone
 from typing import Dict, Any
 
@@ -100,7 +100,15 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
         logging.info(f"Added new sonde '{packet.serial}' to tracker list. Tracked list is now: {list(tracked_sondes.keys())}")
 
     # Send packet to tracker
-    tracked_sondes[packet.serial].handle_packet(packet)
+    try:
+        tracked_sondes[packet.serial].handle_packet(packet)
+    except Exception as e:
+        logging.error(f"Encountered exception while processing packet in tracker for sonde '{packet.serial}': {e}\nClosing tracker and continuing.")
+        logging.info(traceback.format_exc()) # Log as info to prevent having to reproduce with debug logging on
+        try: # Try to close remaining parts of tracker in try except incase something is already closed
+            tracked_sondes[packet.serial].close()
+        except Exception:
+            pass
 
 def update_timeouts():
     """Update all sonde trackers timeouts"""

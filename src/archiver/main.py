@@ -42,7 +42,7 @@ def main():
         while True:
             try: # Got data, update sondes and timeouts
                 data = udp_socket.recv(1024)
-
+                
                 packet = rsdb.Packet().from_json(data)
                 if packet != None: # If packet isn't payload summary, dont process
                     tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout_seconds, config["autorx"]["seconds_per_frame"])
