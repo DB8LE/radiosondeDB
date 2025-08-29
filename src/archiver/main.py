@@ -45,7 +45,7 @@ def main():
 
                 packet = rsdb.Packet().from_json(data)
                 if packet != None: # If packet isn't payload summary, dont process
-                    tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout_seconds)
+                    tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout_seconds, config["autorx"]["seconds_per_frame"])
                 
                 tracking.update_timeouts()
             except socket.timeout: # No data from AutoRX, only update timeouts

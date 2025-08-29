@@ -13,19 +13,24 @@ class Packet():
     def __init__(self):
         self.station: str
         self.serial: str
+        self.type: str | None
+        self.subtype: str | None
+        self.frequency: float | None
         self.frame: int
+        self.time_str: str
         self.datetime: datetime | None
         self.latitude: float
         self.longitude: float
         self.altitude: int
-        self.temperature: float
+        self.temperature: float | None = None
         self.humidity: float | None = None
         self.pressure: float | None = None
         self.speed: float | None = None
-        self.heading: float | None = None
         self.battery: float | None = None
         self.burst_timer: int | None = None
         self.xdata: bytearray | None = None
+        self.rs41_mainboard: str | None = None
+        self.rs41_mainboard_fw: str | None = None
 
     def __repr__(self) -> str:
         return f"""
@@ -55,28 +60,42 @@ Temperature: {self.temperature}°C
         # Assign attributes (always present)
         self.station = data_dict["station"]
         self.serial = data_dict["callsign"]
+        self.time_str = data_dict["time"]
         self.datetime = None
         self.frame = data_dict["frame"]
         self.latitude = data_dict["latitude"]
         self.longitude = data_dict["longitude"]
         self.altitude = data_dict["altitude"]
-        self.temperature = data_dict["temp"]
         
-        # Assign attributes (optional)
+        # Assign optional attributes and set placeholder values to none
+        if "model" in data_dict:
+            self.type = data_dict["model"]
+        if "subtype" in data_dict:
+            self.subtype = data_dict["subtype"]
+        if "freq" in data_dict:
+            self.frequency = round(float(data_dict["freq"][:-4]), 2)
+        if "temp" in data_dict:
+            self.temperature = data_dict["temp"]
+            if int(self.temperature) == 273: self.temperature = None # type: ignore
         if "humidity" in data_dict:
             self.humidity = data_dict["humidity"]
+            if int(self.humidity) == -1: self.humidity = None # type: ignore
         if "pressure" in data_dict:
             self.pressure = data_dict["pressure"]
+            if int(self.pressure) == -1: self.pressure = None # type: ignore
         if "speed" in data_dict:
             self.speed = data_dict["speed"]
-        if "heading" in data_dict:
-            self.heading = data_dict["heading"]
         if "batt" in data_dict:
             self.battery = data_dict["batt"]
         if "bt" in data_dict:
             self.burst_timer = data_dict["bt"]
+            if self.burst_timer == 66535: self.burst_timer = None
         if "aux" in data_dict:
             self.xdata = data_dict["aux"]
+        if "rs41_mainboard" in data_dict:
+            self.rs41_mainboard = data_dict["rs41_mainboard"]
+        if "rs41_mainboard_fw" in data_dict:
+            self.rs41_mainboard_fw = data_dict["rs41_mainboard_fw"]
 
         return self
 
