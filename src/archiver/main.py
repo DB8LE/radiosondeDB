@@ -1,9 +1,7 @@
 import src.rsdb as rsdb
-from . import tracking
+from . import tracking, database as db
 
-import logging, socket, json, traceback
-from datetime import datetime, timezone
-from typing import Dict, Any
+import logging, socket, traceback
 
 def main():
     rsdb.logging.set_up_logging("rsdb_archiver") # Set up logging
@@ -22,11 +20,10 @@ def main():
         exit(1)
 
     # Connect to DB
-    logging.info("Connecting to MariaDB")
     database = rsdb.database.connect(config)
 
     # Set up main listener
-    logging.info("Setting up AutoRX UDP listener")
+    logging.info("Starting AutoRX UDP listener")
     udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -36,7 +33,6 @@ def main():
         pass
 
     # Start listening and enter main loop
-    logging.info("Starting AutoRX UDP listener")
     udp_socket.bind(("", config["autorx"]["port"]))
     try:
         while True:

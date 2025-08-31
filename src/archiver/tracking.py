@@ -3,7 +3,7 @@ from . import database
 
 import logging, traceback
 from datetime import datetime, timezone
-from typing import Dict, Any
+from typing import Dict
 
 import mariadb
 
@@ -46,6 +46,9 @@ class SondeTracker():
                 self.close()
                 return
             
+            # Get burst point
+            self.burst_packet = database.find_burst_point(self.cursor, self.sonde_serial)
+
             # Add to meta table
             database.add_to_meta(self.cursor, self.first_packet, self.burst_packet, self.latest_packet, self.total_frames, self.frame_spacing)
 
@@ -58,10 +61,8 @@ class SondeTracker():
         self.total_frames += 1
         self.latest_packet = packet
 
-        # TODO: Determine burst packet (maybe after timeout?)
-
-        database.add_to_tracking(self.cursor, packet)
         logging.debug(f"Handling packet: {packet}")
+        database.add_to_tracking(self.cursor, packet)
 
         # Update latest packet time for rx timeout
         self.latest_packet_time = datetime.now(timezone.utc)
@@ -72,7 +73,7 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
     """Process packet from AutoRX by passing it to sonde specific handlers"""
 
     # Set packet datetime using date from RTC and time from UDP packet
-    packet_time = datetime.strptime(packet.time_str, "%H:%M:%S").time()
+    packet_time = datetime.strptime(packet.time_str, "%H:%M:%S").time() # type: ignore
     packet.datetime = datetime.now(timezone.utc).replace(
                     hour=packet_time.hour,
                     minute=packet_time.minute,

@@ -1,7 +1,7 @@
 import src.rsdb as rsdb
 
 import logging
-from typing import Dict, Any
+from typing import List, Tuple
 
 import mariadb
 
@@ -54,3 +54,36 @@ def wipe_flight(cursor: mariadb.Cursor, serial: str):
 
     logging.info(f"Wiping flight tracking data for sonde '{serial}'")
     cursor.execute("DELETE FROM tracking WHERE serial = ?;", (serial,))
+
+def find_burst_point(cursor: mariadb.Cursor, serial: str) -> rsdb.Packet | None:
+    """Find the burst point of a flight. Returns None if flight doesn't have a burst point"""
+
+    has_burst_point = True
+
+    # Get maximum altitude
+    cursor.execute("SELECT frame, latitude, longitude, altitude " \
+                   "FROM tracking WHERE serial = ? ORDER BY altitude DESC LIMIT 1;",
+                    (serial,))
+    data = cursor.fetchone()
+
+    # Try to get next and previous frame to ensure it is actually a burst
+    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? ORDER BY frame DESC LIMIT 1;", (serial, data[0],))
+    previous = cursor.fetchone()
+    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? ORDER BY frame ASC LIMIT 1;", (serial, data[0],))
+    next = cursor.fetchone()
+
+    if (previous is None) or (next is None):
+        has_burst_point = False
+
+    # Format packet
+    if has_burst_point:
+        packet = rsdb.Packet()
+        packet.serial = serial
+        packet.frame = data[0]
+        packet.latitude = data[1]
+        packet.longitude = data[2]
+        packet.altitude = data[3]
+    else:
+        packet = None
+
+    return packet

@@ -11,14 +11,14 @@ class Packet():
     """
 
     def __init__(self):
-        self.station: str
+        self.station: str | None = None
         self.serial: str
-        self.type: str | None
-        self.subtype: str | None
-        self.frequency: float | None
+        self.type: str | None = None
+        self.subtype: str | None = None
+        self.frequency: float | None = None
         self.frame: int
-        self.time_str: str
-        self.datetime: datetime | None
+        self.time_str: str | None = None
+        self.datetime: datetime | None = None
         self.latitude: float
         self.longitude: float
         self.altitude: int
