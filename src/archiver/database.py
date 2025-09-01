@@ -61,7 +61,7 @@ def find_burst_point(cursor: mariadb.Cursor, serial: str) -> rsdb.Packet | None:
     has_burst_point = True
 
     # Get maximum altitude
-    cursor.execute("SELECT frame, latitude, longitude, altitude " \
+    cursor.execute("SELECT frame, latitude, longitude, altitude, time " \
                    "FROM tracking WHERE serial = ? ORDER BY altitude DESC LIMIT 1;",
                     (serial,))
     data = cursor.fetchone()
@@ -83,7 +83,10 @@ def find_burst_point(cursor: mariadb.Cursor, serial: str) -> rsdb.Packet | None:
         packet.latitude = data[1]
         packet.longitude = data[2]
         packet.altitude = data[3]
+        packet.datetime = data[4]
+        logging.debug(f"Found burst packet for sonde flight '{serial}': {packet}")
     else:
+        logging.debug(f"Sonde flight '{serial}' has no burst point")
         packet = None
 
     return packet
