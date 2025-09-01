@@ -1,11 +1,11 @@
 import src.rsdb as rsdb
 
-import logging
+import logging, statistics
 from typing import List, Tuple
 
 import mariadb
 
-def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet: None | rsdb.Packet, latest_packet: rsdb.Packet, frame_count: int, frame_spacing: int):
+def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet: None | rsdb.Packet, latest_packet: rsdb.Packet, frame_count: int):
     """Add a flight to the metadata table by its first packet, last packet and optionally burst packet"""
 
     logging.info(f"Adding sonde '{first_packet.serial}' to meta table")
@@ -33,8 +33,8 @@ def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet:
     frequency = None if latest_packet.frequency is None else round(latest_packet.frequency, 2)
 
     # Insert into DB
-    cursor.execute("INSERT INTO meta VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-                   (first_packet.serial, latest_packet.type, latest_packet.subtype, frame_count, frame_spacing,
+    cursor.execute("INSERT INTO meta VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+                   (first_packet.serial, latest_packet.type, latest_packet.subtype, frame_count,
                     has_humidity, has_pressure, has_battery, has_burst_timer, has_xdata, frequency,
                     first_packet.datetime, first_packet.latitude, first_packet.longitude, first_packet.altitude,
                     latest_packet.datetime, latest_packet.latitude, latest_packet.longitude, latest_packet.altitude,

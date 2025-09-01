@@ -10,15 +10,14 @@ import mariadb
 class SondeTracker():
     """Process payload summaries received by radiosonde_auto_rx for a specific sonde"""
 
-    def __init__(self, sonde_serial: str, db_cursor: mariadb.Cursor, min_frames: int, rx_timeout_seconds: int, frame_spacing: int):
+    def __init__(self, sonde_serial: str, db_cursor: mariadb.Cursor, min_frames: int, rx_timeout_seconds: int, min_frame_spacing: int):
         self.sonde_serial = sonde_serial
         self.cursor = db_cursor
         self.min_frames = min_frames
         self.rx_timeout = rx_timeout_seconds
-        self.frame_spacing = frame_spacing
+        self.min_frame_spacing = min_frame_spacing
 
         self.total_frames = 0
-        self.latest_packet_time = datetime.now(timezone.utc)
 
         self.latest_packet: rsdb.Packet
         self.first_packet: rsdb.Packet
@@ -35,7 +34,8 @@ class SondeTracker():
         """Update timeout to terminate if necessary"""
 
         # Check if timeout has been reached
-        last_packet_seconds = (datetime.now(timezone.utc) - self.latest_packet_time).total_seconds()
+        assert self.latest_packet.datetime is not None # should never happen
+        last_packet_seconds = (datetime.now(timezone.utc) - self.latest_packet.datetime).total_seconds()
         if last_packet_seconds >= self.rx_timeout:
             logging.info(f"Sonde '{self.sonde_serial}' has reached the rx timeout")
 
@@ -50,35 +50,35 @@ class SondeTracker():
             self.burst_packet = database.find_burst_point(self.cursor, self.sonde_serial)
 
             # Add to meta table
-            database.add_to_meta(self.cursor, self.first_packet, self.burst_packet, self.latest_packet, self.total_frames, self.frame_spacing)
+            database.add_to_meta(self.cursor, self.first_packet, self.burst_packet, self.latest_packet, self.total_frames)
 
             self.close()
 
     def handle_packet(self, packet: rsdb.Packet):
         """Handle a packet received via UDP from AutoRX"""
 
+        # Check if minimum time between packets has been reached
+        assert packet.datetime is not None # should never fail
+        assert self.latest_packet.datetime is not None # should also never fail
+        last_packet_time_delta = (packet.datetime - self.latest_packet.datetime).total_seconds()
+        if round(last_packet_time_delta, 1) < self.min_frame_spacing:
+            return
+
+        # Add to DB
+        logging.debug(f"Handling packet: {packet}") # TODO: remove this
+        database.add_to_tracking(self.cursor, packet)
+
         # Increment frame counter and set latest packet
         self.total_frames += 1
         self.latest_packet = packet
 
-        logging.debug(f"Handling packet: {packet}")
-        database.add_to_tracking(self.cursor, packet)
-
-        # Update latest packet time for rx timeout
-        self.latest_packet_time = datetime.now(timezone.utc)
-
 tracked_sondes: Dict[str, SondeTracker] = {} # Dict to store currently tracked sondes by their serials with the corresponding handler
 
-def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames: int, rx_timeout_seconds: int, frame_spacing: int):
+def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames: int, rx_timeout_seconds: int, min_frame_spacing: int):
     """Process packet from AutoRX by passing it to sonde specific handlers"""
 
     # Set packet datetime using date from RTC and time from UDP packet
-    packet_time = datetime.strptime(packet.time_str, "%H:%M:%S").time() # type: ignore
-    packet.datetime = datetime.now(timezone.utc).replace(
-                    hour=packet_time.hour,
-                    minute=packet_time.minute,
-                    second=packet_time.second,
-                    microsecond=0)
+    packet.datetime = datetime.now(timezone.utc)
     
     # Remove type prefix from serial (to match sondehub's serial format)
     if packet.serial[:3] == "DFM":
@@ -103,8 +103,9 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
         logging.info(f"Got new sonde '{packet.serial}'")
         
         # Create tracker
-        tracker = SondeTracker(packet.serial, cursor, min_frames, rx_timeout_seconds, frame_spacing)
+        tracker = SondeTracker(packet.serial, cursor, min_frames, rx_timeout_seconds, min_frame_spacing)
         tracker.first_packet = packet
+        tracker.latest_packet = packet
         tracked_sondes[packet.serial] = tracker
 
         logging.info(f"Added new sonde '{packet.serial}' to tracker list. Tracked list is now: {list(tracked_sondes.keys())}")

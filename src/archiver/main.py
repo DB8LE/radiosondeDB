@@ -10,11 +10,11 @@ def main():
     rsdb.logging.set_logging_config(config) # Set logging config
 
     # Check for high timeout and warn user
-    rx_timeout_seconds = config["autorx"]["seconds_per_frame"] * config["archiver"]["rx_timeout_frames"]
-    if rx_timeout_seconds > 3600: # 1 hour threshhold
+    rx_timeout = config["archiver"]["rx_timeout"]
+    if rx_timeout > 3600: # 1 hour threshhold
         logging.warning("The configured receive timeout is quite high. This will lead to " \
                         "large gaps in your received data. If you are okay with this, you can safely ignore this warning")
-    elif rx_timeout_seconds > 7200: # 2 hour threshhold
+    elif rx_timeout > 7200: # 2 hour threshhold
         logging.error("The configured receive timeout of 2 hours or more is too high. Lower it, or if you're " \
                       "really really sure about this, edit the code and remove this check.")
         exit(1)
@@ -41,7 +41,7 @@ def main():
                 
                 packet = rsdb.Packet().from_json(data)
                 if packet != None: # If packet isn't payload summary, dont process
-                    tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout_seconds, config["autorx"]["seconds_per_frame"])
+                    tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout, config["archiver"]["min_seconds_per_frame"])
                 
                 tracking.update_timeouts()
             except socket.timeout: # No data from AutoRX, only update timeouts
