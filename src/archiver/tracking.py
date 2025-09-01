@@ -79,6 +79,15 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
                     minute=packet_time.minute,
                     second=packet_time.second,
                     microsecond=0)
+    
+    # Remove type prefix from serial (to match sondehub's serial format)
+    if packet.serial[:3] == "DFM":
+        packet.serial = packet.serial[4:]
+    elif packet.serial[:4] == "IMET":
+        packet.serial = packet.serial[5:]
+    elif packet.serial[:3] == "M10":
+        packet.serial = packet.serial[4:]
+    # TODO: are there more of these?
 
     # Check if sonde is already being tracked
     if packet.serial not in tracked_sondes: # If no, do checks and add to tracked list
