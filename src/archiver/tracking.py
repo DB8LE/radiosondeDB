@@ -57,12 +57,13 @@ class SondeTracker():
     def handle_packet(self, packet: rsdb.Packet):
         """Handle a packet received via UDP from AutoRX"""
 
-        # Check if minimum time between packets has been reached
+        # Check if minimum time between packets has been reached, unlees packet is first packet
         assert packet.datetime is not None # should never fail
         assert self.latest_packet.datetime is not None # should also never fail
-        last_packet_time_delta = (packet.datetime - self.latest_packet.datetime).total_seconds()
-        if round(last_packet_time_delta, 1) < self.min_frame_spacing:
-            return
+        if packet != self.first_packet:
+            last_packet_time_delta = (packet.datetime - self.latest_packet.datetime).total_seconds()
+            if round(last_packet_time_delta, 1) < self.min_frame_spacing:
+                return
 
         # Add to DB
         logging.debug(f"Handling packet: {packet}") # TODO: remove this
@@ -92,12 +93,13 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
     # Check if sonde is already being tracked
     if packet.serial not in tracked_sondes: # If no, do checks and add to tracked list
         # Check if sonde is already in DB (reception picked back up after timeout)
-        query = "SELECT EXISTS (SELECT 1 FROM tracking WHERE serial = '?') AS value_exists;"
+        query = "SELECT EXISTS (SELECT 1 FROM tracking WHERE serial = ?) AS value_exists;"
         cursor = db_conn.cursor()
         cursor.execute(query, (packet.serial,))
 
         if cursor.fetchone()[0] == 1:
             logging.debug(f"New sonde '{packet.serial}' already exists in DB. Skipping") # Log as debug to not spam info level logs
+            return
 
         # Sonde is new
         logging.info(f"Got new sonde '{packet.serial}'")
