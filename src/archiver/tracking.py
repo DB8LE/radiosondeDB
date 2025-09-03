@@ -5,7 +5,7 @@ import logging, traceback
 from datetime import datetime, timezone
 from typing import Dict
 
-import mariadb
+import mariadb, geopy.distance
 
 class SondeTracker():
     """Process payload summaries received by radiosonde_auto_rx for a specific sonde"""
@@ -57,7 +57,7 @@ class SondeTracker():
     def handle_packet(self, packet: rsdb.Packet):
         """Handle a packet received via UDP from AutoRX"""
 
-        # Check if minimum time between packets has been reached, unlees packet is first packet
+        # Check if minimum time between packets has been reached, unless packet is first packet
         assert packet.datetime is not None # should never fail
         assert self.latest_packet.datetime is not None # should also never fail
         if packet != self.first_packet:
@@ -65,8 +65,18 @@ class SondeTracker():
             if round(last_packet_time_delta, 1) < self.min_frame_spacing:
                 return
 
+        # Filter packets by velocity (>300m/s shouldn't be possible without a broken packet)
+        if packet != self.first_packet:
+            prev_position = (self.latest_packet.latitude, self.latest_packet.longitude)
+            position = (packet.latitude, packet.longitude)
+            distance = geopy.distance.geodesic(prev_position, position).meters
+            velocity = distance / last_packet_time_delta # type: ignore
+            if velocity > 300:
+                logging.info(f"Discarded invalid packet from sonde '{self.sonde_serial}' (velocity {round(velocity, 1)} m/s)")
+                return
+
         # Add to DB
-        logging.debug(f"Handling packet: {packet}") # TODO: remove this
+        #logging.debug(f"Handling packet: {packet}") # TODO: remove this
         database.add_to_tracking(self.cursor, packet)
 
         # Increment frame counter and set latest packet
