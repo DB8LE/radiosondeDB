@@ -13,11 +13,8 @@ dependencies = [
     "geopy (>=2.4.1,<3.0.0)"
 ]
 
-[tool.poetry.group.journald]
-optional = true
-
-[tool.poetry.group.journald.dependencies]
-systemd-python = "^234"
+[project.optional-dependencies]
+journal = ["systemd-python"]
 
 [tool.poetry]
 packages = [
@@ -25,7 +22,7 @@ packages = [
 ]
 
 [tool.poetry.scripts]
-archiver = "src.archiver.main:main"
+rsdb-archiver = "src.archiver.main:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

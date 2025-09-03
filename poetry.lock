@@ -76,14 +76,18 @@ files = [
 name = "systemd-python"
 version = "234"
 description = "Python interface for libsystemd"
-optional = false
+optional = true
 python-versions = "*"
-groups = ["journald"]
+groups = ["main"]
+markers = "extra == \"journal\""
 files = [
     {file = "systemd-python-234.tar.gz", hash = "sha256:fd0e44bf70eadae45aadc292cb0a7eb5b0b6372cd1b391228047d33895db83e7"},
 ]
 
+[extras]
+journal = ["systemd-python"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10"
-content-hash = "ae269395daca6b0ea3ac4c05752d7f7a069942f8f993a5514b791309b10407ac"
+content-hash = "22ad65466f0e18289d4d37b41d8b7d3f2eaaba0bff35df9faf9539903bbf5e02"
