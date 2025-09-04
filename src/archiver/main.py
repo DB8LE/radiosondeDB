@@ -1,10 +1,10 @@
 import src.rsdb as rsdb
-from . import tracking, database as db
+from . import tracking
 
 import logging, socket, traceback
 
 def main():
-    rsdb.logging.set_up_logging("rsdb_archiver") # Set up logging
+    rsdb.logging.set_up_logging("rsdb-archiver") # Set up logging
     
     config = rsdb.config.read_config() # Read config
     rsdb.logging.set_logging_config(config) # Set logging config

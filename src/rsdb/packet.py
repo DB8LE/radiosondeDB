@@ -76,7 +76,7 @@ Temperature: {self.temperature}°C
             self.frequency = round(float(data_dict["freq"][:-4]), 2)
         if "temp" in data_dict:
             self.temperature = data_dict["temp"]
-            if int(self.temperature) == 273: self.temperature = None # type: ignore
+            if int(self.temperature) == -273: self.temperature = None # type: ignore
         if "humidity" in data_dict:
             self.humidity = data_dict["humidity"]
             if int(self.humidity) == -1: self.humidity = None # type: ignore
