@@ -46,6 +46,8 @@ class SondeTracker():
                 self.close()
                 return
             
+            # TODO: speed can be missing for certain sondes. calculate after flight.
+            
             # Get burst point
             self.burst_packet = database.find_burst_point(self.cursor, self.sonde_serial)
 

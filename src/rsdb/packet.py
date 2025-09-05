@@ -85,6 +85,7 @@ Temperature: {self.temperature}°C
             if int(self.pressure) == -1: self.pressure = None # type: ignore
         if "speed" in data_dict:
             self.speed = data_dict["speed"]
+            if self.speed < 0: self.speed = None # type: ignore
         if "batt" in data_dict:
             self.battery = data_dict["batt"]
         if "bt" in data_dict:
