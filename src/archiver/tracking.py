@@ -37,7 +37,7 @@ class SondeTracker():
         assert self.latest_packet.datetime is not None # should never happen
         last_packet_seconds = (datetime.now(timezone.utc) - self.latest_packet.datetime).total_seconds()
         if last_packet_seconds >= self.rx_timeout:
-            logging.info(f"Sonde '{self.sonde_serial}' has reached the rx timeout")
+            logging.info(f"Sonde '{self.sonde_serial}' has reached the rx timeout with {self.total_frames} frames")
 
             # If flight hasn't reached the minimum required amount of frames, discard the flight
             if self.total_frames < self.min_frames:
@@ -46,8 +46,10 @@ class SondeTracker():
                 self.close()
                 return
             
-            # TODO: speed can be missing for certain sondes. calculate after flight.
-            
+            # Calculate missing speed values
+            if self.total_frames > 1:
+                database.calculate_speed_values(self.cursor, self.sonde_serial)
+
             # Get burst point
             self.burst_packet = database.find_burst_point(self.cursor, self.sonde_serial)
 

@@ -23,7 +23,7 @@ def main():
     database = rsdb.database.connect(config)
 
     # Set up main listener
-    logging.info("Starting AutoRX UDP listener")
+    logging.info(f"Starting AutoRX UDP listener on port {config["autorx"]["port"]}")
     udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

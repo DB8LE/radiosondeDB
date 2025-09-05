@@ -1,9 +1,10 @@
 import src.rsdb as rsdb
 
-import logging, statistics
-from typing import List, Tuple
+import logging
+from typing import List, Dict
 
 import mariadb
+import geopy.distance
 
 def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet: None | rsdb.Packet, latest_packet: rsdb.Packet, frame_count: int):
     """Add a flight to the metadata table by its first packet, last packet and optionally burst packet"""
@@ -67,9 +68,9 @@ def find_burst_point(cursor: mariadb.Cursor, serial: str) -> rsdb.Packet | None:
     data = cursor.fetchone()
 
     # Try to get next and previous frame to ensure it is actually a burst
-    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? ORDER BY frame DESC LIMIT 1;", (serial, data[0],))
+    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? AND altitude < ? ORDER BY frame DESC LIMIT 1;", (serial, data[0], data[3],))
     previous = cursor.fetchone()
-    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? ORDER BY frame ASC LIMIT 1;", (serial, data[0],))
+    cursor.execute("SELECT altitude FROM tracking WHERE serial = ? AND frame < ? AND altitude < ? ORDER BY frame ASC LIMIT 1;", (serial, data[0], data[3],))
     next = cursor.fetchone()
 
     if (previous is None) or (next is None):
@@ -90,3 +91,65 @@ def find_burst_point(cursor: mariadb.Cursor, serial: str) -> rsdb.Packet | None:
         packet = None
 
     return packet
+
+def calculate_speed_values(cursor: mariadb.Cursor, serial: str):
+    """Calculate missing speed for packets where it's not present for specified flight"""
+
+    logging.info(f"Calculating missing speed values for flight '{serial}'")
+
+    # Get all fackets from flight
+    cursor.execute("SELECT frame, speed, latitude, longitude, time " \
+                   "FROM tracking WHERE serial = ? ORDER BY frame;",
+                    (serial,))
+    packets = cursor.fetchall()
+
+    # Calculate new speed values
+    updated_values: Dict[int, float] = {} # List with frame numbers and updated speed
+    for i, packet in enumerate(packets):
+        if packet[1] != None: # Skip packets that already have a speed value
+            continue
+
+        if i == 0: # First packet
+            next_packet = packets[i+1]
+
+            lat1 = packet[2]
+            lon1 = packet[3]
+            lat2 = next_packet[2]
+            lon2 = next_packet[3]
+
+            time_diff = (next_packet[4] - packet[4]).total_seconds()
+        elif i == (len(packets)-1): # Last packet
+            prev_packet = packets[i-1]
+
+            lat1 = packet[2]
+            lon1 = packet[3]
+            lat2 = prev_packet[2]
+            lon2 = prev_packet[3]
+
+            time_diff = (packet[4] - prev_packet[4]).total_seconds()
+        else: # Other packets
+            prev_packet = packets[i-1]
+            next_packet = packets[i+1]
+
+            lat1 = prev_packet[2]
+            lon1 = prev_packet[3]
+            lat2 = prev_packet[2]
+            lon2 = prev_packet[3]
+
+            time_diff = (next_packet[4] - prev_packet[4]).total_seconds()
+
+        # Calculate speed
+        distance = geopy.distance.geodesic((lat1, lon1), (lat2, lon2)).meters
+        speed = distance / time_diff
+
+        # Add new speed to dict
+        updated_values[packet[0]] = round(speed, 1)
+
+    if updated_values == {}: # If theres nothing to be done, log and return
+        logging.info(f"All speed values in flight '{serial}' are already present")
+    else: # Theres packets that need to be fixed
+        logging.info(f"Setting speed for {len(updated_values)} packets in flight '{serial}'")
+
+    # Update values in DB
+    for frame, new_speed in updated_values.items():
+        cursor.execute("UPDATE tracking SET speed = ? WHERE serial = ? AND frame = ?", (new_speed, serial, frame,))
