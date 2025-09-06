@@ -90,7 +90,7 @@ Temperature: {self.temperature}°C
             self.battery = data_dict["batt"]
         if "bt" in data_dict:
             self.burst_timer = data_dict["bt"]
-            if self.burst_timer == 66535: self.burst_timer = None
+            if self.burst_timer == 65535: self.burst_timer = None
         if "aux" in data_dict:
             self.xdata = data_dict["aux"]
         if "rs41_mainboard" in data_dict:
