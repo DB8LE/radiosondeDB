@@ -30,3 +30,6 @@ rx_timeout = 300 # The time in seconds that needs to pass without a packet to st
                  # After reception for a sonde has been stopped due to timeout, archival will not continue, even if
                  # reception is regained to avoid long pauses between packets. Similar behaviour can still be configured
                  # if this option is set to a high value
+
+[dashboard]
+port = 55670 # Port for the dashboard
