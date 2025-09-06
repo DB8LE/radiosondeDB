@@ -1,2 +1,2 @@
-from . import config, logging, database
-from .packet import Packet
+from . import config as config, logging as logging, database as database
+from .packet import Packet as Packet

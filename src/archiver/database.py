@@ -1,7 +1,7 @@
 import src.rsdb as rsdb
 
 import logging
-from typing import List, Dict
+from typing import Dict
 
 import mariadb
 import geopy.distance
@@ -12,14 +12,14 @@ def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet:
     logging.info(f"Adding sonde '{first_packet.serial}' to meta table")
 
     # Check what "extras" the flight has
-    has_humidity = latest_packet.humidity != None
-    has_pressure = latest_packet.pressure != None
-    has_battery = latest_packet.battery != None
-    has_burst_timer = latest_packet.burst_timer != None
-    has_xdata = latest_packet.xdata != None
+    has_humidity = latest_packet.humidity is not None
+    has_pressure = latest_packet.pressure is not None
+    has_battery = latest_packet.battery is not None
+    has_burst_timer = latest_packet.burst_timer is not None
+    has_xdata = latest_packet.xdata is not None
 
     # Set burst packet data to none if no burst packet was provided
-    if burst_packet == None:
+    if burst_packet is None:
         burst_time = None
         burst_lat = None
         burst_lon = None
@@ -106,7 +106,7 @@ def calculate_speed_values(cursor: mariadb.Cursor, serial: str):
     # Calculate new speed values
     updated_values: Dict[int, float] = {} # List with frame numbers and updated speed
     for i, packet in enumerate(packets):
-        if packet[1] != None: # Skip packets that already have a speed value
+        if packet[1] is not None: # Skip packets that already have a speed value
             continue
 
         if i == 0: # First packet

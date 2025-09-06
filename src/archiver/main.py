@@ -23,13 +23,13 @@ def main():
     database = rsdb.database.connect(config)
 
     # Set up main listener
-    logging.info(f"Starting AutoRX UDP listener on port {config["autorx"]["port"]}")
+    logging.info(f"Starting AutoRX UDP listener on port {config['autorx']['port']}")
     udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-    except:
+    except Exception:
         pass
 
     # Start listening and enter main loop
@@ -40,7 +40,7 @@ def main():
                 data = udp_socket.recv(1024)
                 
                 packet = rsdb.Packet().from_json(data)
-                if packet != None: # If packet isn't payload summary, dont process
+                if packet is not None: # If packet isn't payload summary, dont process
                     tracking.process_packet(packet, database, config["archiver"]["min_frames"], rx_timeout, config["archiver"]["min_seconds_per_frame"])
                 
                 tracking.update_timeouts()
