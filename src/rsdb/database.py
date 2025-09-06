@@ -14,7 +14,7 @@ altitude INT NOT NULL,
 temperature DECIMAL(4, 1),
 humidity DECIMAL(4, 1),
 pressure DECIMAL(6, 2),
-speed DECIMAL(4, 1) NOT NULL,
+speed DECIMAL(4, 1),
 battery DECIMAL(3, 1),
 burst_timer MEDIUMINT,
 xdata VARBINARY(256),
@@ -23,7 +23,7 @@ PRIMARY KEY(serial, time)
 """
 
 CREATE_META_SQL = """
-CREATE OR REPLACE TABLE meta (
+CREATE TABLE IF NOT EXISTS meta (
 serial VARCHAR(16) NOT NULL PRIMARY KEY,
 sonde_type VARCHAR(16) NOT NULL,
 subtype VARCHAR(16),
