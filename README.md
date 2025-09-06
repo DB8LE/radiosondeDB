@@ -2,11 +2,27 @@
 
 A tool for logging radiosonde flights received with radiosonde_auto_rx.
 
+> [!IMPORTANT]
+> This project is still in early development. Breaking changes are being made constantly.
+
 ## Installing
 
 First off, only linux is supported. The expected setup is having RSDB installed on the same server as autorx, which probably runs linux. Other operating systems might work, but they are completely untested.
 
 RadiosondeDB provides multiple apps. They can all be installed with essentially the same commands, with just the name of the app differing.
+
+### AutoRX setup
+
+These configuration options should be set in radiosonde_auto_rx:
+
+1. Ensure `payload_summary_enabled` is set to true
+2. Set `ozi_update_rate` to zero
+
+#### Optional: Modify code to include extra data
+
+If you want data like the rs41 mainboard or firmware version, you need to slightly modify the code.
+If you're running an older version (before v1.8.0), you will also need to do this to get pressure and XDATA values.
+In the file `radiosonde_auto_rx/auto_rx/autorx/ozimux.py`, look for the list `EXTRA_FIELDS` and ensure the list contains these strings: `"pressure", "aux", "rs41_mainboard", "rs41_mainboard_fw"`.
 
 ### Initial setup
 
@@ -58,4 +74,28 @@ sudo systemctl enable rsdb-archiver.service
 
 # Start!
 sudo systemctl start rsdb-archiver.service
+```
+
+## Updating
+
+> [!CAUTION]
+> Breaking changes to the database or other parts of the program makes updating require more steps. When these do happen, a guide on how to update will be added to this file.
+
+```bash
+# Start in radiosondeDB install directory
+
+# Pull from github (optionally stash using `git stash` first if you've made changes to the code)
+git pull
+
+# Activate venv
+source ./venv/bin/activate
+
+# Install using pip (as with installation, optionally add [journal] for systemctl journal support)
+pip install .
+
+# Compare new config.example.toml file and old config.toml file, and check for new/changed configuration options.
+# RSDB will not start with mismatched configuration keys between config.example.toml and config.toml.
+
+# If using systemd service, restart it
+sudo systemctl restart rsdb-*
 ```
