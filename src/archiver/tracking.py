@@ -104,6 +104,14 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
         packet.serial = packet.serial[4:]
     # TODO: are there more of these?
 
+    # Remove suffix from main type
+    if packet.type is not None: # theoretically shouldn't happen but who knows
+        if packet.type[-4:] == "-SGP":
+            packet.type = packet.type[:4]
+        elif packet.type[-3:] == "-SG":
+            packet.type = packet.type[:3]
+        # TODO: are there more of these?
+
     # Check if sonde is already being tracked
     if packet.serial not in tracked_sondes: # If no, do checks and add to tracked list
         # Check if sonde is already in DB (reception picked back up after timeout)
