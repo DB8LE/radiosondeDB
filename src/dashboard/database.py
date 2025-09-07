@@ -16,25 +16,57 @@ def get_week_sonde_count(cursor: mariadb.Cursor) -> Dict[datetime, int]:
 
     cursor.execute("""
 WITH RECURSIVE dates AS (
-  SELECT CURDATE() AS d
-  UNION ALL
-  SELECT d - INTERVAL 1 DAY
-  FROM dates
-  WHERE d > CURDATE() - INTERVAL 6 DAY
+    SELECT CURDATE() AS d
+    UNION ALL
+    SELECT d - INTERVAL 1 DAY
+    FROM dates
+    WHERE d > CURDATE() - INTERVAL 6 DAY
 )
 SELECT
-  dates.d AS day,
-  COALESCE(t.cnt, 0) AS row_count
+    dates.d AS day,
+    COALESCE(t.cnt, 0) AS row_count
 FROM dates
 LEFT JOIN (
-  SELECT DATE(first_rx_time) AS day, COUNT(*) AS cnt
-  FROM meta
-  WHERE DATE(first_rx_time) BETWEEN CURDATE() - INTERVAL 6 DAY AND CURDATE()
-  GROUP BY DATE(first_rx_time)
+    SELECT DATE(first_rx_time) AS day, COUNT(*) AS cnt
+    FROM meta
+    WHERE DATE(first_rx_time) BETWEEN CURDATE() - INTERVAL 6 DAY AND CURDATE()
+    GROUP BY DATE(first_rx_time)
 ) AS t ON t.day = dates.d
 ORDER BY day DESC;
 """)
 
+    data = dict(cursor.fetchall())
+
+    return data
+
+def get_week_types(cursor: mariadb.Cursor) -> Dict[str, int]:
+    """Get sonde type occurences in the past 7 days including today"""
+
+    cursor.execute("""
+SELECT
+    sonde_type AS value,
+    COUNT(*) AS occurrences
+FROM meta
+WHERE first_rx_time >= CURDATE() - INTERVAL 6 DAY
+    AND first_rx_time < CURDATE() + INTERVAL 1 DAY
+GROUP BY sonde_type;
+""")
+    
+    data = dict(cursor.fetchall())
+
+    return data
+
+def get_all_types(cursor: mariadb.Cursor) -> Dict[str, int]:
+    """Get all time sonde type occurences"""
+
+    cursor.execute("""
+SELECT
+    sonde_type AS value,
+    COUNT(*) AS occurrences
+FROM meta
+GROUP BY sonde_type;
+""")
+    
     data = dict(cursor.fetchall())
 
     return data

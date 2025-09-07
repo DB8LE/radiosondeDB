@@ -5,6 +5,7 @@ import logging, traceback, os
 import mariadb
 import plotly.graph_objects as go
 from dash import Dash, html, dcc
+import dash_bootstrap_components as dbc
 
 COLORS = {
     "background": "#121214",
@@ -23,9 +24,29 @@ class Dashboard:
             logging.error(f"Assets path {assets_path} does not exist! Make sure you're running the program in the right directory.")
             exit(1)
 
-        self.app = Dash(assets_folder=assets_path)
+        self.app = Dash(assets_folder=assets_path, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
+
+    def _create_figure(self, graph, title: str) -> go.Figure:
+        """Internal function to create a figure for a graph and set some common settings"""
+
+        figure = go.Figure(graph) # Create figure
+
+        figure.update_layout( # Set background
+            paper_bgcolor=COLORS["background"],
+            plot_bgcolor=COLORS["background"]
+        )
+        figure.update_layout( # Set font and title
+            font=dict(
+                family="sans-serif",
+                size=16,
+                color=COLORS["text"]
+            ),
+            title=title
+        )
+
+        return figure
 
     def _create_page(self) -> html.Div:
         """Internal function to get data from database and assemble the web page"""
@@ -37,41 +58,59 @@ class Dashboard:
 
         sonde_count = database.get_sonde_count(self.cursor)
         week_sonde_count = database.get_week_sonde_count(self.cursor)
+        week_sonde_types = database.get_week_types(self.cursor)
+        all_sonde_types = database.get_all_types(self.cursor)
 
         # Create graphs
         logging.debug("Creating graphs")
 
-        figure = go.Figure([go.Bar(
+        week_sonde_count_fig = self._create_figure(go.Bar(
             x=list(week_sonde_count.keys()),
             y=list(week_sonde_count.values())
-        )])
-        figure.update_layout( # Set background
-            paper_bgcolor=COLORS["background"],
-            plot_bgcolor=COLORS["background"]
-        )
-        figure.update_layout( # Set font and title
-            font=dict(
-                family="sans-serif",
-                size=16,
-                color=COLORS["text"]
-            ),
-            title="7 Day Sonde Count"
-        )
-        
+        ), "7 Day Sonde Count").update_layout(margin=dict(b=0))
+
+        week_sonde_types_fig = self._create_figure(go.Pie(
+            labels=list(week_sonde_types.keys()),
+            values=list(week_sonde_types.values())
+        ), "Sonde Types (7d)").update_layout(autosize=True)
+
+        all_sonde_types_fig = self._create_figure(go.Pie(
+            labels=list(all_sonde_types.keys()),
+            values=list(all_sonde_types.values())
+        ), "Sonde Types (all)").update_layout(autosize=True)
+
+        placeholder_fig = self._create_figure(go.Bar(x=[1, 2, 3], y=[2, 4, 6]), "Placeholder")
+        placeholder_fig.update_layout(margin=dict(b=0))
+
         # Initialize dashboard
         logging.debug("Creating page layout")
         app = Dash(assets_folder="./assets/dashboard")
         app.title = "RSDB Dashboard"
+
+        # Create layout for graphs with dbcs
+        graphs = dbc.Container([
+            dbc.Row([
+                dbc.Col(dcc.Graph(figure=week_sonde_count_fig), style={"height": "100%"}, width=6),
+                dbc.Col(dbc.Row([
+                    dbc.Col(dcc.Graph(figure=week_sonde_types_fig), width=6),
+                    dbc.Col(dcc.Graph(figure=all_sonde_types_fig), width=6)
+                    ], style={"height": "100%"}), width=6)
+            ], style={"height": "40vh"}),
+            dbc.Row([
+                dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"}),
+                dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"})
+            ],style={"height": "40vh"})
+        ], fluid=True)
 
         layout = html.Div(style={"backgroundColor": COLORS["background"], "height": "100vh"}, children=[
             html.H1(children="RSDB Dashboard", style={"color": COLORS["text"]}),
 
             html.Div(children=f"Total sondes: {sonde_count}", style={
                 "color": COLORS["text"],
-                "padding-left": "2%",
-                "padding-bottom": "1%"}),
+                "font-size": "1.5rem",
+                "padding-left": "2%"}),
 
-            dcc.Graph(figure=figure, style={"width": "95%", "height": "80%", "padding-left": "2%"})
+            html.Div(children=graphs, style={"overflowY": "auto"})
         ])
 
         return layout

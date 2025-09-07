@@ -9,7 +9,6 @@ def main():
 
     # Connect to DB
     database = rsdb.database.connect(config)
-    database.autocommit = False
 
     # Start dashboard
     dash = dashboard.Dashboard(config["dashboard"]["port"], database.cursor())
