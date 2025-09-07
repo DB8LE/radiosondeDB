@@ -102,6 +102,8 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
         packet.serial = packet.serial[5:]
     elif packet.serial[:3] == "M10":
         packet.serial = packet.serial[4:]
+    elif packet.serial[:3] == "M20":
+        packet.serial = packet.serial[4:]
     # TODO: are there more of these?
 
     # Remove suffix from main type
