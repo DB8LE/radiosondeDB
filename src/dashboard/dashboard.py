@@ -1,6 +1,6 @@
 from . import database
 
-import logging, traceback
+import logging, traceback, os
 
 import mariadb
 import plotly.graph_objects as go
@@ -18,7 +18,12 @@ class Dashboard:
         self.port = port
         self.cursor = cursor
 
-        self.app = Dash(assets_folder="./assets/dashboard")
+        assets_path = os.path.join(os.getcwd(), "./assets/dashboard")
+        if not os.path.exists(assets_path):
+            logging.error(f"Assets path {assets_path} does not exist! Make sure you're running the program in the right directory.")
+            exit(1)
+
+        self.app = Dash(assets_folder=assets_path)
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
 
