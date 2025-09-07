@@ -3,7 +3,8 @@ from . import database
 import logging, traceback
 
 import mariadb
-from dash import Dash, html
+import plotly.graph_objects as go
+from dash import Dash, html, dcc
 
 COLORS = {
     "background": "#121214",
@@ -30,16 +31,42 @@ class Dashboard:
         logging.debug("Fetching data from MariaDB")
 
         sonde_count = database.get_sonde_count(self.cursor)
+        week_sonde_count = database.get_week_sonde_count(self.cursor)
 
+        # Create graphs
+        logging.debug("Creating graphs")
+
+        figure = go.Figure([go.Bar(
+            x=list(week_sonde_count.keys()),
+            y=list(week_sonde_count.values())
+        )])
+        figure.update_layout( # Set background
+            paper_bgcolor=COLORS["background"],
+            plot_bgcolor=COLORS["background"]
+        )
+        figure.update_layout( # Set font and title
+            font=dict(
+                family="sans-serif",
+                size=16,
+                color=COLORS["text"]
+            ),
+            title="7 Day Sonde Count"
+        )
+        
         # Initialize dashboard
         logging.debug("Creating page layout")
         app = Dash(assets_folder="./assets/dashboard")
         app.title = "RSDB Dashboard"
 
-        layout = html.Div(style={"backgroundColor": COLORS["background"], "height": "100vh"}, id="main-div", children=[
+        layout = html.Div(style={"backgroundColor": COLORS["background"], "height": "100vh"}, children=[
             html.H1(children="RSDB Dashboard", style={"color": COLORS["text"]}),
 
-            html.Div(children=f"Total sondes: {sonde_count}", style={"color": COLORS["text"]})
+            html.Div(children=f"Total sondes: {sonde_count}", style={
+                "color": COLORS["text"],
+                "padding-left": "2%",
+                "padding-bottom": "1%"}),
+
+            dcc.Graph(figure=figure, style={"width": "95%", "height": "80%", "padding-left": "2%"})
         ])
 
         return layout

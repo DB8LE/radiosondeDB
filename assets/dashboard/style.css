@@ -10,11 +10,6 @@ h1 {
     font-size: 300;
 }
 
-/* Pad all divs except top ones */
-div:not(#_dash-app-content):not(#react-entry-point):not(#main-div) {
-    padding-left: 2%;
-}
-
 body {
     margin: 0;
     font-family: sans-serif;
