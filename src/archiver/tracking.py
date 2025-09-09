@@ -109,9 +109,9 @@ def process_packet(packet: rsdb.Packet, db_conn: mariadb.Connection, min_frames:
     # Remove suffix from main type
     if packet.type is not None: # theoretically shouldn't happen but who knows
         if packet.type[-4:] == "-SGP":
-            packet.type = packet.type[:4]
+            packet.type = packet.type[:-4]
         elif packet.type[-3:] == "-SG":
-            packet.type = packet.type[:3]
+            packet.type = packet.type[:-3]
         # TODO: are there more of these?
 
     # Check if sonde is already being tracked
