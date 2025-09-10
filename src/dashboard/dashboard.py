@@ -4,6 +4,7 @@ import logging, traceback, os
 
 import mariadb
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from dash import Dash, html, dcc
 import dash_bootstrap_components as dbc
 
@@ -28,10 +29,8 @@ class Dashboard:
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
 
-    def _create_figure(self, graph, title: str) -> go.Figure:
-        """Internal function to create a figure for a graph and set some common settings"""
-
-        figure = go.Figure(graph) # Create figure
+    def _apply_figure_settings(self, figure: go.Figure, title: str | None = None):
+        """Internal function to apply common settings to a plotly figure"""
 
         figure.update_layout( # Set background
             paper_bgcolor=COLORS["background"],
@@ -42,9 +41,18 @@ class Dashboard:
                 family="sans-serif",
                 size=16,
                 color=COLORS["text"]
-            ),
-            title=title
+            )
         )
+
+        if title: # Optionally set title
+            figure.update_layout(title=title)
+
+    def _create_figure(self, graph, title: str | None = None) -> go.Figure:
+        """Internal function to create a figure for a graph and set some common settings"""
+
+        figure = go.Figure(graph) # Create figure
+
+        self._apply_figure_settings(figure, title)
 
         return figure
 
@@ -69,15 +77,25 @@ class Dashboard:
             y=list(week_sonde_count.values())
         ), "7 Day Sonde Count").update_layout(margin=dict(b=0))
 
-        week_sonde_types_fig = self._create_figure(go.Pie(
-            labels=list(week_sonde_types.keys()),
-            values=list(week_sonde_types.values())
-        ), "Sonde Types (7d)").update_layout(autosize=True)
+        sonde_types_fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]])
 
-        all_sonde_types_fig = self._create_figure(go.Pie(
+
+        # Creaete sonde type subplot
+        sonde_types_fig.add_trace(
+            go.Pie(
+            labels=list(week_sonde_types.keys()),
+            values=list(week_sonde_types.values())),
+            row=1, col=1
+        )
+
+        sonde_types_fig.add_trace(
+            go.Pie(
             labels=list(all_sonde_types.keys()),
-            values=list(all_sonde_types.values())
-        ), "Sonde Types (all)").update_layout(autosize=True)
+            values=list(all_sonde_types.values())),
+            row=1, col=2
+        )
+
+        self._apply_figure_settings(sonde_types_fig, "Sonde Type (7d/all)")
 
         placeholder_fig = self._create_figure(go.Bar(x=[1, 2, 3], y=[2, 4, 6]), "Placeholder")
         placeholder_fig.update_layout(margin=dict(b=0))
@@ -91,15 +109,12 @@ class Dashboard:
         graphs = dbc.Container([
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=week_sonde_count_fig), style={"height": "100%"}, width=6),
-                dbc.Col(dbc.Row([
-                    dbc.Col(dcc.Graph(figure=week_sonde_types_fig), width=6),
-                    dbc.Col(dcc.Graph(figure=all_sonde_types_fig), width=6)
-                    ], style={"height": "100%"}), width=6)
+                dbc.Col(dcc.Graph(figure=sonde_types_fig), width=6)
             ], style={"height": "40vh"}),
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"}),
                 dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"})
-            ],style={"height": "40vh"})
+            ], style={"height": "40vh"})
         ], fluid=True)
 
         layout = html.Div(style={"backgroundColor": COLORS["background"], "height": "100vh"}, children=[
