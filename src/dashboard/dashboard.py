@@ -68,6 +68,7 @@ class Dashboard:
         week_sonde_count = database.get_week_sonde_count(self.cursor)
         week_sonde_types = database.get_week_types(self.cursor)
         all_sonde_types = database.get_all_types(self.cursor)
+        week_avg_frame_count = database.get_week_frame_count(self.cursor)
 
         # Create graphs
         logging.debug("Creating graphs")
@@ -78,7 +79,6 @@ class Dashboard:
         ), "7 Day Sonde Count").update_layout(margin=dict(b=0))
 
         sonde_types_fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]])
-
 
         # Creaete sonde type subplot
         sonde_types_fig.add_trace(
@@ -97,6 +97,11 @@ class Dashboard:
 
         self._apply_figure_settings(sonde_types_fig, "Sonde Type (7d/all)")
 
+        week_avg_frame_count_fig = self._create_figure(go.Scatter( # TODO: add second line/y-axis with time instead of frames?
+            x=list(week_avg_frame_count.keys()),
+            y=list(week_avg_frame_count.values())
+        ), title="Daily Avg. Frame Count (7d)").update_layout(margin=dict(b=0))
+
         placeholder_fig = self._create_figure(go.Bar(x=[1, 2, 3], y=[2, 4, 6]), "Placeholder")
         placeholder_fig.update_layout(margin=dict(b=0))
 
@@ -113,10 +118,11 @@ class Dashboard:
             ], style={"height": "40vh"}),
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"}),
-                dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"})
+                dbc.Col(dcc.Graph(figure=week_avg_frame_count_fig), style={"height": "100%"})
             ], style={"height": "40vh"})
         ], fluid=True)
 
+        # Create page layout
         layout = html.Div(style={"backgroundColor": COLORS["background"], "height": "100vh"}, children=[
             html.H1(children="RSDB Dashboard", style={"color": COLORS["text"]}),
 

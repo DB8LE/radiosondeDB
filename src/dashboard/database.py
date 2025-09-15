@@ -70,3 +70,31 @@ GROUP BY sonde_type;
     data = dict(cursor.fetchall())
 
     return data
+
+def get_week_frame_count(cursor: mariadb.Cursor) -> Dict[datetime, int]:
+    """Get average frame count for the past 7 days including today"""
+
+    cursor.execute("""
+WITH RECURSIVE dates AS (
+  SELECT CURDATE() AS d
+  UNION ALL
+  SELECT d - INTERVAL 1 DAY
+  FROM dates
+  WHERE d > CURDATE() - INTERVAL 6 DAY
+)
+SELECT
+  dates.d AS day,
+  COALESCE(ROUND(AVG(t.frame_count), 0), 0 ) AS avg_val
+FROM
+  dates
+  LEFT JOIN meta AS t
+    ON DATE(t.first_rx_time) = dates.d
+GROUP BY
+  dates.d
+ORDER BY
+  dates.d;
+""")
+    
+    data = dict(cursor.fetchall())
+
+    return data
