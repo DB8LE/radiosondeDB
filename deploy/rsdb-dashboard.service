@@ -1,0 +1,16 @@
+[Unit]
+Description=RadiosondeDB dashboard
+After=network.target mariadb.service
+Requires=mariadb.service
+
+[Service]
+ExecStart=/home/<your_user>/radiosondeDB/venv/bin/python3 /home/<your_user>/radiosondeDB/venv/bin/rsdb-dashboard
+Restart=always
+RestartSec=120
+WorkingDirectory=/home/<your_user>/radiosondeDB
+User=<your_user>
+SyslogIdentifier=rsdb-dashboard
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
