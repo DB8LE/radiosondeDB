@@ -1,12 +1,12 @@
-from . import database
+from . import database, graphs
 
 import logging, traceback, os
 
 import mariadb
 import plotly.graph_objects as go
+import dash_bootstrap_components as dbc
 from plotly.subplots import make_subplots
 from dash import Dash, html, dcc
-import dash_bootstrap_components as dbc
 
 COLORS = {
     "background": "#121214",
@@ -59,77 +59,34 @@ class Dashboard:
     def _create_page(self) -> html.Div:
         """Internal function to get data from database and assemble the web page"""
 
-        logging.debug("Creating page")
-
-        # Get data from MariaDB
-        logging.debug("Fetching data from MariaDB")
-
-        sonde_count = database.get_sonde_count(self.cursor)
-        week_sonde_count = database.get_week_sonde_count(self.cursor)
-        week_sonde_types = database.get_week_types(self.cursor)
-        all_sonde_types = database.get_all_types(self.cursor)
-        week_avg_frame_count = database.get_week_frame_count(self.cursor)
-        week_burst_alts = database.get_week_burst_alts(self.cursor)
-
-        # Create graphs
-        logging.debug("Creating graphs")
-
-        week_sonde_count_fig = self._create_figure(go.Bar(
-            x=list(week_sonde_count.keys()),
-            y=list(week_sonde_count.values())
-        ), "7 Day Sonde Count").update_layout(margin=dict(b=0))
-
-        sonde_types_fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]])
-
-        # Create sonde type subplot
-        sonde_types_fig.add_trace(
-            go.Pie(
-            labels=list(week_sonde_types.keys()),
-            values=list(week_sonde_types.values())),
-            row=1, col=1
-        )
-
-        sonde_types_fig.add_trace(
-            go.Pie(
-            labels=list(all_sonde_types.keys()),
-            values=list(all_sonde_types.values())),
-            row=1, col=2
-        )
-
-        self._apply_figure_settings(sonde_types_fig, "Sonde Type (7d/all)")
-
-        week_avg_frame_count_fig = self._create_figure(go.Scatter( # TODO: add second line/y-axis with time instead of frames?
-            x=list(week_avg_frame_count.keys()),
-            y=list(week_avg_frame_count.values())
-        ), title="Daily Avg. Frame Count (7d)").update_layout(margin=dict(b=0))
-
-        # Create burst altitude box plot
-        week_burst_alt_boxes = []
-        for day, altitudes in week_burst_alts.items():
-            week_burst_alt_boxes.append(go.Box(
-                y=altitudes,
-                name=str(day)
-            ))
-
-        week_burst_alts_fig = go.Figure(week_burst_alt_boxes)
-        self._apply_figure_settings(week_burst_alts_fig, "Burst altitude (7d)")
-        week_burst_alts_fig.update_layout(margin=dict(b=0), showlegend=False)
+        # TODO: Add option for caching dashboard?
+        logging.debug("Creating dashboard")
 
         # Initialize dashboard
-        logging.debug("Creating page layout")
         app = Dash(assets_folder="./assets/dashboard")
         app.title = "RSDB Dashboard"
 
+        # Get sonde count
+        sonde_count = database.get_sonde_count(self.cursor)
+
+        # Define graphs
+        week_sonde_count = graphs.WeekSondeCount(COLORS, self.cursor)
+        sonde_types = graphs.SondeTypes(COLORS, self.cursor)
+        week_burst_altitudes = graphs.WeekBurstAltitudes(COLORS, self.cursor)
+        week_frame_count = graphs.WeekFrameCount(COLORS, self.cursor)
+
         # TODO: Allow user to configure plots in config file
         # Create layout for graphs with dbcs
-        graphs = dbc.Container([
+        logging.debug("Creating page layout")
+
+        graphs_layout = dbc.Container([
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=week_sonde_count_fig), style={"height": "100%"}, width=6),
-                dbc.Col(dcc.Graph(figure=sonde_types_fig), width=6)
+                dbc.Col(dcc.Graph(figure=week_sonde_count.create_figure()), style={"height": "100%"}, width=6),
+                dbc.Col(dcc.Graph(figure=sonde_types.create_figure()), width=6)
             ], style={"height": "40vh"}),
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=week_burst_alts_fig), style={"height": "100%"}),
-                dbc.Col(dcc.Graph(figure=week_avg_frame_count_fig), style={"height": "100%"})
+                dbc.Col(dcc.Graph(figure=week_burst_altitudes.create_figure()), style={"height": "100%"}),
+                dbc.Col(dcc.Graph(figure=week_frame_count.create_figure()), style={"height": "100%"})
             ], style={"height": "40vh"})
         ], fluid=True)
 
@@ -142,7 +99,7 @@ class Dashboard:
                 "font-size": "1.5rem",
                 "padding-left": "2%"}),
 
-            html.Div(children=graphs, style={"overflowY": "auto"})
+            html.Div(children=graphs_layout, style={"overflowY": "auto"})
         ])
 
         return layout
