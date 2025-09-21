@@ -69,6 +69,7 @@ class Dashboard:
         week_sonde_types = database.get_week_types(self.cursor)
         all_sonde_types = database.get_all_types(self.cursor)
         week_avg_frame_count = database.get_week_frame_count(self.cursor)
+        week_burst_alts = database.get_week_burst_alts(self.cursor)
 
         # Create graphs
         logging.debug("Creating graphs")
@@ -80,7 +81,7 @@ class Dashboard:
 
         sonde_types_fig = make_subplots(rows=1, cols=2, specs=[[{"type": "domain"}, {"type": "domain"}]])
 
-        # Creaete sonde type subplot
+        # Create sonde type subplot
         sonde_types_fig.add_trace(
             go.Pie(
             labels=list(week_sonde_types.keys()),
@@ -102,14 +103,24 @@ class Dashboard:
             y=list(week_avg_frame_count.values())
         ), title="Daily Avg. Frame Count (7d)").update_layout(margin=dict(b=0))
 
-        placeholder_fig = self._create_figure(go.Bar(x=[1, 2, 3], y=[2, 4, 6]), "Placeholder")
-        placeholder_fig.update_layout(margin=dict(b=0))
+        # Create burst altitude box plot
+        week_burst_alt_boxes = []
+        for day, altitudes in week_burst_alts.items():
+            week_burst_alt_boxes.append(go.Box(
+                y=altitudes,
+                name=str(day)
+            ))
+
+        week_burst_alts_fig = go.Figure(week_burst_alt_boxes)
+        self._apply_figure_settings(week_burst_alts_fig, "Burst altitude (7d)")
+        week_burst_alts_fig.update_layout(margin=dict(b=0), showlegend=False)
 
         # Initialize dashboard
         logging.debug("Creating page layout")
         app = Dash(assets_folder="./assets/dashboard")
         app.title = "RSDB Dashboard"
 
+        # TODO: Allow user to configure plots in config file
         # Create layout for graphs with dbcs
         graphs = dbc.Container([
             dbc.Row([
@@ -117,7 +128,7 @@ class Dashboard:
                 dbc.Col(dcc.Graph(figure=sonde_types_fig), width=6)
             ], style={"height": "40vh"}),
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=placeholder_fig), style={"height": "100%"}),
+                dbc.Col(dcc.Graph(figure=week_burst_alts_fig), style={"height": "100%"}),
                 dbc.Col(dcc.Graph(figure=week_avg_frame_count_fig), style={"height": "100%"})
             ], style={"height": "40vh"})
         ], fluid=True)

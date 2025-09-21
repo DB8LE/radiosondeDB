@@ -1,6 +1,6 @@
-import logging
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
+from collections import defaultdict
 
 import mariadb
 
@@ -76,19 +76,19 @@ def get_week_frame_count(cursor: mariadb.Cursor) -> Dict[datetime, int]:
 
     cursor.execute("""
 WITH RECURSIVE dates AS (
-  SELECT CURDATE() AS d
-  UNION ALL
-  SELECT d - INTERVAL 1 DAY
-  FROM dates
-  WHERE d > CURDATE() - INTERVAL 6 DAY
+    SELECT CURDATE() AS d
+    UNION ALL
+    SELECT d - INTERVAL 1 DAY
+    FROM dates
+    WHERE d > CURDATE() - INTERVAL 6 DAY
 )
 SELECT
-  dates.d AS day,
-  COALESCE(ROUND(AVG(t.frame_count), 0), 0 ) AS avg_val
+    dates.d AS day,
+    COALESCE(ROUND(AVG(t.frame_count), 0), 0 ) AS avg_val
 FROM
-  dates
-  LEFT JOIN meta AS t
-    ON DATE(t.first_rx_time) = dates.d
+    dates
+    LEFT JOIN meta AS t
+        ON DATE(t.first_rx_time) = dates.d
 GROUP BY
   dates.d
 ORDER BY
@@ -98,3 +98,37 @@ ORDER BY
     data = dict(cursor.fetchall())
 
     return data
+
+def get_week_burst_alts(cursor: mariadb.Cursor) -> Dict[datetime, List[int]]:
+    """Get a list of burst altitudes for the past 7 days including today"""
+
+    cursor.execute("""
+WITH RECURSIVE dates AS (
+    SELECT CURDATE() AS d
+    UNION ALL
+    SELECT d - INTERVAL 1 DAY
+    FROM dates
+    WHERE d > CURDATE() - INTERVAL 6 DAY
+)
+SELECT
+    dates.d AS day,
+    t.burst_alt 
+FROM
+    dates
+    LEFT JOIN meta AS t
+        ON DATE(t.first_rx_time) = dates.d
+        AND t.frame_count IS NOT NULL
+ORDER BY
+    dates.d, 
+    t.first_rx_time;
+""")
+
+    data = cursor.fetchall()
+    
+    grouped = defaultdict(list)
+    for d, value in data:
+        grouped[d].append(value)
+
+    grouped = dict(grouped)
+
+    return grouped
