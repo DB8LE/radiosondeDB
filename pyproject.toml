@@ -1,6 +1,6 @@
 [project]
 name = "radiosondedb"
-version = "0.2.0"
+version = "0.3.0"
 description = "A tool for logging radiosonde flights received with radiosonde_auto_rx"
 authors = [
   {name = "DB8LE",email = "db8le@darc.de"}
