@@ -33,3 +33,10 @@ rx_timeout = 300 # The time in seconds that needs to pass without a packet to st
 
 [dashboard]
 port = 55670 # Port for the dashboard
+
+# Define graphs in dashboard
+# Available graphs: week_sonde_count, sonde_types, week_burst_altitudes, week_frame_count (more to be added)
+top_left_graph = "week_sonde_count"
+top_right_graph = "sonde_types"
+bottom_left_graph = "week_burst_altitudes"
+bottom_right_graph = "week_frame_count"

@@ -1,6 +1,7 @@
 from . import database, graphs
 
 import logging, traceback, os
+from typing import Dict, Any
 
 import mariadb
 import dash_bootstrap_components as dbc
@@ -11,18 +12,40 @@ COLORS = {
     "text": "#ffffff"
 }
 
+def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.DashboardGraph:
+    """Get a graph class from a graph name. Requires a cursor to initialize the graph class with."""
+
+    if graph_name == "week_sonde_count":
+        return graphs.WeekSondeCount(COLORS, cursor)
+    elif graph_name == "sonde_types":
+        return graphs.SondeTypes(COLORS, cursor)
+    elif graph_name == "week_burst_altitudes":
+        return graphs.WeekBurstAltitudes(COLORS, cursor)
+    elif graph_name == "week_frame_count":
+        return graphs.WeekFrameCount(COLORS, cursor)
+    else:
+        logging.error(f"Attemped to get class for invalid name {graph_name}")
+        exit(1)
+
 class Dashboard:
-    def __init__(self, port: int, cursor: mariadb.Cursor) -> None:
+    def __init__(self, dashboard_config: Dict[str, Any], cursor: mariadb.Cursor) -> None:
         logging.info("Initializing dashboard")
 
-        self.port = port
+        self.port = dashboard_config["port"]
         self.cursor = cursor
 
+        self.top_left_graph = dashboard_config["top_left_graph"]
+        self.top_right_graph = dashboard_config["top_right_graph"]
+        self.bottom_left_graph = dashboard_config["bottom_left_graph"]
+        self.bottom_right_graph = dashboard_config["bottom_right_graph"]
+
+        # Load assets
         assets_path = os.path.join(os.getcwd(), "./assets/dashboard")
         if not os.path.exists(assets_path):
             logging.error(f"Assets path {assets_path} does not exist! Make sure you're running the program in the right directory.")
             exit(1)
 
+        # Create app
         self.app = Dash(assets_folder=assets_path, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
@@ -41,10 +64,10 @@ class Dashboard:
         sonde_count = database.get_sonde_count(self.cursor)
 
         # Define graphs
-        week_sonde_count = graphs.WeekSondeCount(COLORS, self.cursor)
-        sonde_types = graphs.SondeTypes(COLORS, self.cursor)
-        week_burst_altitudes = graphs.WeekBurstAltitudes(COLORS, self.cursor)
-        week_frame_count = graphs.WeekFrameCount(COLORS, self.cursor)
+        top_left_graph = get_graph_from_name(self.top_left_graph, self.cursor)
+        top_right_graph = get_graph_from_name(self.top_right_graph, self.cursor)
+        bottom_left_graph = get_graph_from_name(self.bottom_left_graph, self.cursor)
+        bottom_right_graph = get_graph_from_name(self.bottom_right_graph, self.cursor)
 
         # TODO: Allow user to configure plots in config file
         # Create layout for graphs with dbcs
@@ -52,12 +75,12 @@ class Dashboard:
 
         graphs_layout = dbc.Container([
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=week_sonde_count.create_figure()), style={"height": "100%"}, width=6),
-                dbc.Col(dcc.Graph(figure=sonde_types.create_figure()), width=6)
+                dbc.Col(dcc.Graph(figure=top_left_graph.create_figure()), style={"height": "100%"}, width=6),
+                dbc.Col(dcc.Graph(figure=top_right_graph.create_figure()), width=6)
             ], style={"height": "40vh"}),
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=week_burst_altitudes.create_figure()), style={"height": "100%"}),
-                dbc.Col(dcc.Graph(figure=week_frame_count.create_figure()), style={"height": "100%"})
+                dbc.Col(dcc.Graph(figure=bottom_left_graph.create_figure()), style={"height": "100%"}),
+                dbc.Col(dcc.Graph(figure=bottom_right_graph.create_figure()), style={"height": "100%"})
             ], style={"height": "40vh"})
         ], fluid=True)
 
