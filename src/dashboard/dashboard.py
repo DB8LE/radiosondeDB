@@ -3,9 +3,7 @@ from . import database, graphs
 import logging, traceback, os
 
 import mariadb
-import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
-from plotly.subplots import make_subplots
 from dash import Dash, html, dcc
 
 COLORS = {
@@ -28,33 +26,6 @@ class Dashboard:
         self.app = Dash(assets_folder=assets_path, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
-
-    def _apply_figure_settings(self, figure: go.Figure, title: str | None = None):
-        """Internal function to apply common settings to a plotly figure"""
-
-        figure.update_layout( # Set background
-            paper_bgcolor=COLORS["background"],
-            plot_bgcolor=COLORS["background"]
-        )
-        figure.update_layout( # Set font and title
-            font=dict(
-                family="sans-serif",
-                size=16,
-                color=COLORS["text"]
-            )
-        )
-
-        if title: # Optionally set title
-            figure.update_layout(title=title)
-
-    def _create_figure(self, graph, title: str | None = None) -> go.Figure:
-        """Internal function to create a figure for a graph and set some common settings"""
-
-        figure = go.Figure(graph) # Create figure
-
-        self._apply_figure_settings(figure, title)
-
-        return figure
 
     def _create_page(self) -> html.Div:
         """Internal function to get data from database and assemble the web page"""
