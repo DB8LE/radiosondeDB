@@ -39,14 +39,19 @@ class Dashboard:
         self.bottom_left_graph = dashboard_config["bottom_left_graph"]
         self.bottom_right_graph = dashboard_config["bottom_right_graph"]
 
-        # Load assets
-        assets_path = os.path.join(os.getcwd(), "./assets/dashboard")
-        if not os.path.exists(assets_path):
-            logging.error(f"Assets path {assets_path} does not exist! Make sure you're running the program in the right directory.")
+        # Get assets path
+        assets_base_path = os.path.join(os.getcwd(), "./assets/")
+        assets_bootstrap_path = os.path.join(assets_base_path, "bootstrap.min.css")
+        assets_path = os.path.join(assets_base_path, "./dashboard")
+        if (not os.path.exists(assets_path)) or (not os.path.exists(assets_bootstrap_path)):
+            logging.error(f"Assets path {assets_base_path} or required sub-directories do not exist! \
+                          Make sure you're running the program in the right directory.")
             exit(1)
 
         # Create app
-        self.app = Dash(assets_folder=assets_path, meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
+        self.app = Dash(external_stylesheets=[assets_bootstrap_path],
+                        assets_folder=assets_path,
+                        meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
 
