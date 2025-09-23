@@ -27,6 +27,7 @@ packages = [
 [tool.poetry.scripts]
 rsdb-archiver = "src.archiver.main:main"
 rsdb-dashboard = "src.dashboard.main:main"
+rsdb-map = "src.map.main:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

@@ -40,3 +40,6 @@ top_left_graph = "week_sonde_count"
 top_right_graph = "sonde_types"
 bottom_left_graph = "week_burst_altitudes"
 bottom_right_graph = "week_frame_count"
+
+[map]
+port = 55671 # Port for the map
