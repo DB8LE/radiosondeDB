@@ -11,6 +11,6 @@ def main():
     database = rsdb.database.connect(config)
 
     # Start dashboard
-    dash = dashboard.Dashboard(config["dashboard"], database.cursor())
+    dash = dashboard.Dashboard(config["dashboard"], database)
     dash.run()
     

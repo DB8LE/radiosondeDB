@@ -28,11 +28,11 @@ def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.Dashb
         exit(1)
 
 class Dashboard:
-    def __init__(self, dashboard_config: Dict[str, Any], cursor: mariadb.Cursor) -> None:
+    def __init__(self, dashboard_config: Dict[str, Any], connection: mariadb.Connection) -> None:
         logging.info("Initializing dashboard")
 
         self.port = dashboard_config["port"]
-        self.cursor = cursor
+        self.connection = connection
 
         self.top_left_graph = dashboard_config["top_left_graph"]
         self.top_right_graph = dashboard_config["top_right_graph"]
@@ -56,18 +56,17 @@ class Dashboard:
         # TODO: Add option for caching dashboard?
         logging.debug("Creating dashboard")
 
-        # Initialize dashboard
-        app = Dash(assets_folder="./assets/dashboard")
-        app.title = "RSDB Dashboard"
+        # Create cursor
+        cursor = self.connection.cursor()
 
         # Get sonde count
-        sonde_count = database.get_sonde_count(self.cursor)
+        sonde_count = database.get_sonde_count(cursor)
 
         # Define graphs
-        top_left_graph = get_graph_from_name(self.top_left_graph, self.cursor)
-        top_right_graph = get_graph_from_name(self.top_right_graph, self.cursor)
-        bottom_left_graph = get_graph_from_name(self.bottom_left_graph, self.cursor)
-        bottom_right_graph = get_graph_from_name(self.bottom_right_graph, self.cursor)
+        top_left_graph = get_graph_from_name(self.top_left_graph, cursor)
+        top_right_graph = get_graph_from_name(self.top_right_graph, cursor)
+        bottom_left_graph = get_graph_from_name(self.bottom_left_graph, cursor)
+        bottom_right_graph = get_graph_from_name(self.bottom_right_graph, cursor)
 
         # TODO: Allow user to configure plots in config file
         # Create layout for graphs with dbcs
@@ -96,6 +95,8 @@ class Dashboard:
             html.Div(children=graphs_layout, style={"overflowY": "auto"})
         ])
 
+        cursor.close()
+
         return layout
 
     def run(self):
@@ -111,5 +112,5 @@ class Dashboard:
             logging.info(traceback.format_exc())
 
             # Close cursor
-            if self.cursor:
-                self.cursor.close()
+            if self.connection:
+                self.connection.close()
