@@ -49,8 +49,8 @@ class Dashboard:
             exit(1)
 
         # Create app
-        self.app = Dash(external_stylesheets=[assets_bootstrap_path],
-                        assets_folder=assets_path,
+        self.app = Dash(assets_folder=assets_base_path,
+                        assets_path_ignore=[r"^(?!dashboard).*$"],
                         meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB Dashboard"
         self.app.layout = self._create_page
