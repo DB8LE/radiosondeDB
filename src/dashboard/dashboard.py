@@ -75,11 +75,11 @@ class Dashboard:
         graphs_layout = dbc.Container([
             dbc.Row([
                 dbc.Col(dcc.Graph(figure=top_left_graph.create_figure()), style={"height": "100%"}, width=6),
-                dbc.Col(dcc.Graph(figure=top_right_graph.create_figure()), width=6)
+                dbc.Col(dcc.Graph(figure=top_right_graph.create_figure()), style={"height": "100%"}, width=6)
             ], style={"height": "40vh"}),
             dbc.Row([
-                dbc.Col(dcc.Graph(figure=bottom_left_graph.create_figure()), style={"height": "100%"}),
-                dbc.Col(dcc.Graph(figure=bottom_right_graph.create_figure()), style={"height": "100%"})
+                dbc.Col(dcc.Graph(figure=bottom_left_graph.create_figure()), style={"height": "100%"}, width=6),
+                dbc.Col(dcc.Graph(figure=bottom_right_graph.create_figure()), style={"height": "100%"}, width=6)
             ], style={"height": "40vh"})
         ], fluid=True)
 
