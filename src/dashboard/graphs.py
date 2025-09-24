@@ -57,7 +57,7 @@ class WeekSondeCount(DashboardGraph):
         figure = self._make_figure(go.Bar(
             x=list(data.keys()),
             y=list(data.values())
-        ), "7 Day Sonde Count")
+        ), "Sonde Count (7d)")
 
         return figure
 
@@ -104,7 +104,7 @@ class WeekBurstAltitudes(DashboardGraph):
             ))
 
         # Make figure
-        figure = self._make_figure(box_graphs, "Burst altitude (7d)")
+        figure = self._make_figure(box_graphs, "Burst Altitude (7d)")
         figure.update_layout(showlegend=False)
 
         return figure
