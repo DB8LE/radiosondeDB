@@ -1,4 +1,5 @@
 import src.rsdb as rsdb
+from src.rsdb.web import COLORS
 from . import database
 
 import logging

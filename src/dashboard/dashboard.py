@@ -1,4 +1,5 @@
 import src.rsdb as rsdb
+from src.rsdb.web import COLORS
 from . import database, graphs
 
 import logging, traceback, os
@@ -7,11 +8,6 @@ from typing import Dict, Any
 import mariadb
 import dash_bootstrap_components as dbc
 from dash import Dash, html, dcc
-
-COLORS = {
-    "background": "#121214",
-    "text": "#ffffff"
-}
 
 def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.DashboardGraph:
     """Get a graph class from a graph name. Requires a cursor to initialize the graph class with."""

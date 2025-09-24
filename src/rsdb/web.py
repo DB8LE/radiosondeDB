@@ -5,6 +5,11 @@ from typing import Dict, Any
 import mariadb
 from dash import Dash, html
 
+COLORS = {
+    "background": "#121214",
+    "text": "#ffffff"
+}
+
 class WebApp(ABC):
     def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection, set_layout: bool = True) -> None:
         logging.info("Initializing "+app_name)
