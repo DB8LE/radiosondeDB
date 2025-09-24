@@ -2,12 +2,12 @@ import src.rsdb as rsdb
 from src.rsdb.web import COLORS
 from . import database, graphs
 
-import logging, traceback, os
+import logging
 from typing import Dict, Any
 
 import mariadb
 import dash_bootstrap_components as dbc
-from dash import Dash, html, dcc
+from dash import html, dcc
 
 def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.DashboardGraph:
     """Get a graph class from a graph name. Requires a cursor to initialize the graph class with."""
@@ -26,14 +26,13 @@ def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.Dashb
 
 class Dashboard(rsdb.web.WebApp):
     def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
-        super().__init__(app_name, config, connection, False)
+        super().__init__(app_name, config, connection)
 
         self.top_left_graph = config["top_left_graph"]
         self.top_right_graph = config["top_right_graph"]
         self.bottom_left_graph = config["bottom_left_graph"]
         self.bottom_right_graph = config["bottom_right_graph"]
         
-        # Ensure create_page is only called for the first time once variables have been set
         self.app.layout = self._create_page
 
     def _create_page(self) -> html.Div:

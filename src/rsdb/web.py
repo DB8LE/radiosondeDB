@@ -11,7 +11,7 @@ COLORS = {
 }
 
 class WebApp(ABC):
-    def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection, set_layout: bool = True) -> None:
+    def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
         logging.info("Initializing "+app_name)
 
         self._app_name = app_name
@@ -34,14 +34,6 @@ class WebApp(ABC):
                         prevent_initial_callbacks=True,
                         meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB "+app_name.capitalize()
-        if set_layout:
-            self.app.layout = self._create_page
-
-    @abstractmethod
-    def _create_page(self) -> html.Div:
-        """Internal function to get data from database and assemble the web page"""
-
-        pass
     
     def run(self):
         """Run the website"""
