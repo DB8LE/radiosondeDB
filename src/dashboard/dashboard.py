@@ -1,3 +1,4 @@
+import src.rsdb as rsdb
 from . import database, graphs
 
 import logging, traceback, os
@@ -27,32 +28,16 @@ def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.Dashb
         logging.error(f"Attemped to get class for invalid name {graph_name}")
         exit(1)
 
-class Dashboard:
-    def __init__(self, dashboard_config: Dict[str, Any], connection: mariadb.Connection) -> None:
-        logging.info("Initializing dashboard")
+class Dashboard(rsdb.web.WebApp):
+    def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
+        super().__init__(app_name, config, connection, False)
 
-        self.port = dashboard_config["port"]
-        self.connection = connection
-
-        self.top_left_graph = dashboard_config["top_left_graph"]
-        self.top_right_graph = dashboard_config["top_right_graph"]
-        self.bottom_left_graph = dashboard_config["bottom_left_graph"]
-        self.bottom_right_graph = dashboard_config["bottom_right_graph"]
-
-        # Get assets path
-        assets_base_path = os.path.join(os.getcwd(), "./assets/")
-        assets_bootstrap_path = os.path.join(assets_base_path, "bootstrap.min.css")
-        assets_path = os.path.join(assets_base_path, "./dashboard")
-        if (not os.path.exists(assets_path)) or (not os.path.exists(assets_bootstrap_path)):
-            logging.error(f"Assets path {assets_base_path} or required sub-directories do not exist! \
-                          Make sure you're running the program in the right directory.")
-            exit(1)
-
-        # Create app
-        self.app = Dash(assets_folder=assets_base_path,
-                        assets_path_ignore=[r"^(?!dashboard).*$"],
-                        meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
-        self.app.title = "RSDB Dashboard"
+        self.top_left_graph = config["top_left_graph"]
+        self.top_right_graph = config["top_right_graph"]
+        self.bottom_left_graph = config["bottom_left_graph"]
+        self.bottom_right_graph = config["bottom_right_graph"]
+        
+        # Ensure create_page is only called for the first time once variables have been set
         self.app.layout = self._create_page
 
     def _create_page(self) -> html.Div:
@@ -103,19 +88,3 @@ class Dashboard:
         cursor.close()
 
         return layout
-
-    def run(self):
-        """Run the dashboard"""
-
-        logging.info("Running dashboard")
-        
-        # Run dash app
-        try:
-            self.app.run(host="0.0.0.0", port=self.port)
-        except Exception as e:
-            logging.error(f"Got exception while running dashboard: {e}")
-            logging.info(traceback.format_exc())
-
-            # Close cursor
-            if self.connection:
-                self.connection.close()

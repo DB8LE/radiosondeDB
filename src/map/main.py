@@ -12,6 +12,6 @@ def main():
     database = rsdb.database.connect(config)
 
     # Start map
-    dash = map.Map(config["map"]["port"], database)
+    dash = map.Map("map", config["map"], database)
     dash.run()
     
