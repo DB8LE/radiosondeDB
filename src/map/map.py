@@ -3,6 +3,7 @@ from src.rsdb.web import COLORS
 from . import database, color
 
 import logging, time
+from datetime import date
 from typing import Dict, Any, List
 
 import folium, mariadb
@@ -17,18 +18,26 @@ class Map(rsdb.web.WebApp):
         @self.app.callback(
             Output("map_iframe", "srcDoc"),
             State("input_serial", "value"),
+            State("input_date_start", "date"),
+            State("input_date_end", "date"),
             Input("button_search", "n_clicks")
         )
-        def update_map(serial, n_clicks):
+        def update_map(serial, date_start, date_end, n_clicks):
             """Callback to update map"""
 
             # Only run if user has clicked the button
             if n_clicks > 0:
                 cursor = self.db_conn.cursor()
 
+                # Convert date types from string to datetime.date
+                if date_start is not None:
+                    date_start = date.fromisoformat(date_start)
+                if date_end is not None:
+                    date_end = date.fromisoformat(date_end)
+
                 # Perform search in DB
                 logging.debug("Searching database")
-                search_results = rsdb.database.search_sondes(cursor, serial)
+                search_results = rsdb.database.search_sondes(cursor, serial, date_start, date_end)
                 logging.debug(f"Got {len(search_results)} results")
 
                 # Create map
@@ -40,12 +49,17 @@ class Map(rsdb.web.WebApp):
         
         # Prepare inputs
         input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
+        # FIXME: Date pickers look weird and sometimes don't scale properly, but I can't find a fix
+        input_date_start = dcc.DatePickerSingle(id="input_date_start", placeholder="Start Date")
+        input_date_end = dcc.DatePickerSingle(id="input_date_end", placeholder="End Date")
         button_search = html.Button("Search", id="button_search", n_clicks=0, className="w-100", style={"height": "100%"})
 
         # Arrange inputs
         inputs = dbc.Container([
             dbc.Row([
-                dbc.Col(input_serial, width=11),
+                dbc.Col(input_serial, width=9),
+                dbc.Col(input_date_start, width=1),
+                dbc.Col(input_date_end, width=1),
                 dbc.Col(button_search, width=1)
             ], class_name="g-0", style={"height": "5vh"})
         ], style={"width": "100%", "height": "5vh", "flex": "0 0 auto"}, fluid=True)

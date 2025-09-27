@@ -1,6 +1,18 @@
 .container-fluid {
-    padding-right:0;
-    padding-left:0;
-    margin-right:auto;
-    margin-left:auto
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: auto;
+    margin-left: auto
 }
+
+/* Set size for datepickers */
+.DateInput, .DateInput_1 {
+  width: 100%;
+}
+.DateInput_input, .DateInput_input_1 {
+  height: 4.9vh;
+  font-size: inherit;
+  padding-top: 0.1vh;
+  padding-bottom: 0.1vh;
+}
+
