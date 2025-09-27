@@ -11,13 +11,13 @@ COLORS = {
 }
 
 class WebApp(ABC):
-    def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
+    def __init__(self, app_name: str, config: Dict[str, Any], db_conn: mariadb.Connection) -> None:
         logging.info("Initializing "+app_name)
 
         self._app_name = app_name
 
         self.port = config["port"]
-        self.connection = connection
+        self.db_conn = db_conn
 
         # Get assets path
         assets_base_path = os.path.join(os.getcwd(), "./assets/")
@@ -49,6 +49,6 @@ class WebApp(ABC):
             logging.info(traceback.format_exc())
 
             # Close cursor
-            if self.connection:
-                self.connection.close()
+            if self.db_conn:
+                self.db_conn.close()
 

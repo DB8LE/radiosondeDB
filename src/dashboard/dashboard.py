@@ -42,7 +42,7 @@ class Dashboard(rsdb.web.WebApp):
         logging.debug("Creating dashboard")
 
         # Create cursor
-        cursor = self.connection.cursor()
+        cursor = self.db_conn.cursor()
 
         # Get sonde count
         sonde_count = database.get_sonde_count(cursor)
