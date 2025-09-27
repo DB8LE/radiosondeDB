@@ -80,7 +80,6 @@ class SondeTracker():
                 return
 
         # Add to DB
-        #logging.debug(f"Handling packet: {packet}") # TODO: remove this
         database.add_to_tracking(self.cursor, packet)
 
         # Increment frame counter and set latest packet

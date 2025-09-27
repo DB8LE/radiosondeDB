@@ -53,7 +53,6 @@ class Dashboard(rsdb.web.WebApp):
         bottom_left_graph = get_graph_from_name(self.bottom_left_graph, cursor)
         bottom_right_graph = get_graph_from_name(self.bottom_right_graph, cursor)
 
-        # TODO: Allow user to configure plots in config file
         # Create layout for graphs with dbcs
         logging.debug("Creating page layout")
 
