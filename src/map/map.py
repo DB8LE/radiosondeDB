@@ -2,8 +2,8 @@ import src.rsdb as rsdb
 from src.rsdb.web import COLORS
 from . import database
 
-import logging
-from typing import Dict, Any
+import logging, time
+from typing import Dict, Any, List
 
 import folium, mariadb
 import dash_bootstrap_components as dbc
@@ -22,7 +22,21 @@ class Map(rsdb.web.WebApp):
         def update_map(serial, n_clicks):
             """Callback to update map"""
 
-            return self._make_map(serial).get_root().render()
+            # Only run if user has clicked the button
+            if n_clicks > 0:
+                cursor = self.db_conn.cursor()
+
+                # Perform search in DB
+                logging.debug("Searching database")
+                search_results = rsdb.database.search_sondes(cursor, serial)
+                logging.debug(f"Got {len(search_results)} results")
+
+                # Create map
+                map = self._make_map(cursor, search_results).get_root().render()
+
+                cursor.close()
+
+                return map
         
         # Prepare inputs
         input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
@@ -41,27 +55,39 @@ class Map(rsdb.web.WebApp):
             html.Div(inputs, style={"width": "100%"}),
             html.Iframe(
                 id="map_iframe",
-                srcDoc=self._make_map().get_root().render(),
+                srcDoc=folium.Map().get_root().render(),
                 style={"flex": "1 1 auto", "overflow": "auto"}
             )
         ], style={"height": "100vh", "display": "flex", "flexDirection": "column"})
         
-    def _make_map(self, serial: str = ""):
+    def _make_map(self, cursor: mariadb.Cursor, serials: List[str] = []):
         """Generate the map with data from the database"""
 
         logging.debug("Creating map")
 
-        # Make DB query
-        cursor = self.connection.cursor()
-        flight_path = database.get_flight_path(cursor, serial)
-        cursor.close()
+        # Get flight paths from DB
+        logging.debug("Getting data from DB")
+        start = time.time()
+        flight_paths = []
+        for serial in serials:
+            flight_path = database.get_flight_path(cursor, serial)
+
+            if flight_path == []:
+                logging.error(f"Sonde {serial} has a meta table entry but none in tracking table.")
+            else:
+                flight_paths.append(flight_path)
+        logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         # Create map
-        if flight_path != []:
-            map = folium.Map(location=flight_path[round(len(flight_path)/2)], zoom_start=7) # center on middle flight point
-            folium.PolyLine(flight_path).add_to(map)
+        logging.debug("Drawing map")
+        start = time.time()
+        if flight_paths != []:
+            map = folium.Map()
+            for flight_path in flight_paths:
+                folium.PolyLine(flight_path).add_to(map)
         else:
             map = folium.Map()
+        logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         return map
         
