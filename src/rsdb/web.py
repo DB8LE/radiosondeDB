@@ -34,7 +34,8 @@ class WebApp(ABC):
                         prevent_initial_callbacks=True,
                         meta_tags=[{"name": "viewport", "content": "width=device-width, initial-scale=1"}])
         self.app.title = "RSDB "+app_name.capitalize()
-    
+        self.app.logger = logging.getLogger()
+
     def run(self):
         """Run the website"""
 
