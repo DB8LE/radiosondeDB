@@ -1,5 +1,5 @@
-import logging
-from typing import Dict, Any
+import logging, datetime
+from typing import Dict, Any, Optional, List
 
 import mariadb
 
@@ -66,3 +66,49 @@ def connect(config: Dict[str, Dict[str, Any]]) -> mariadb.Connection:
     cursor.close()
 
     return conn
+
+def search_sondes(
+    cursor: mariadb.Cursor,
+    serial: Optional[str] = None,
+    start_date: Optional[datetime.date] = None,
+    end_date: Optional[datetime.date] = None
+) -> List[str]:
+    """
+    Search for sondes in the meta table.
+
+    Search parameters:
+    - serial: (with optional wildcard at the end using *)
+    - start_date: filter first_rx_time from this to end_date
+    - end_date: filter first_rx time from start_date to this
+
+    Returns a list of serials matching the parameters
+    """
+    sql = f"SELECT serial FROM meta WHERE 1=1"
+    params: List[Any] = []
+    
+    # Serial filter
+    if serial:
+        if serial.endswith('*'):
+            pattern = serial[:-1] + '%'
+        else:
+            pattern = serial
+        sql += f" AND serial LIKE ?"
+        params.append(pattern)
+    
+    # Date filters
+    if start_date:
+        sql += f" AND first_rx_time >= ?"
+        params.append(start_date)
+    if end_date:
+        sql += f" AND first_rx_time <= ?"
+        params.append(end_date)
+
+    # Run query
+    cursor.execute(sql, params)
+    results = cursor.fetchall()
+
+    # Fix mariadb result
+    results = [tup[0] for tup in results]
+    
+    return results
+
