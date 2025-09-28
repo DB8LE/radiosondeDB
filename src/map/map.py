@@ -16,7 +16,8 @@ class Map(rsdb.web.WebApp):
 
         # Set up map update callback
         @self.app.callback(
-            Output("map_iframe", "srcDoc"),
+            [Output("map_iframe", "srcDoc"),
+            Output("flight_count", "children")],
             State("input_serial", "value"),
             State("input_min_frames", "value"),
             State("input_date_start", "date"),
@@ -42,11 +43,16 @@ class Map(rsdb.web.WebApp):
                 logging.debug(f"Got {len(search_results)} results")
 
                 # Create map
+                map_start_time = time.time()
                 map = self._make_map(cursor, search_results).get_root().render()
+                map_processing_time = time.time() - map_start_time
 
                 cursor.close()
 
-                return map
+                # Create text for flight count map overlay
+                flight_count_text = f"({round(map_processing_time, 1)}s) Showing {len(search_results)} flights"
+
+                return map, flight_count_text
         
         # Prepare inputs
         input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
@@ -71,11 +77,14 @@ class Map(rsdb.web.WebApp):
         # Set app layout
         self.app.layout = html.Div([
             html.Div(inputs, style={"width": "100%"}),
-            html.Iframe(
-                id="map_iframe",
-                srcDoc=folium.Map().get_root().render(),
-                style={"flex": "1 1 auto", "overflow": "auto"}
-            )
+            html.Div([
+                html.Iframe(
+                    id="map_iframe",
+                    srcDoc=folium.Map().get_root().render(),
+                    style={"width": "100%", "height": "100%"}
+                ),
+                html.Div("(0.0s) Showing 0 flights", id="flight_count", className="overlay-text")
+            ], style={"flex": "1 1 auto", "overflow": "auto"})
         ], style={"height": "100vh", "display": "flex", "flexDirection": "column"})
         
     def _make_map(self, cursor: mariadb.Cursor, serials: List[str] = []):

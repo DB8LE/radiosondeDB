@@ -5,6 +5,17 @@
     margin-left: auto
 }
 
+.overlay-text {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  border-radius: 5px;
+  padding: 4px 8px;
+  pointer-events: none;
+}
+
 /* Set size for datepickers */
 .DateInput, .DateInput_1 {
   width: 100%;
