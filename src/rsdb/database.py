@@ -70,6 +70,7 @@ def connect(config: Dict[str, Dict[str, Any]]) -> mariadb.Connection:
 def search_sondes(
     cursor: mariadb.Cursor,
     serial: Optional[str] = None,
+    min_frame_count: Optional[int] = None,
     start_date: Optional[datetime.date] = None,
     end_date: Optional[datetime.date] = None
 ) -> List[str]:
@@ -80,6 +81,7 @@ def search_sondes(
     - serial: (with optional wildcard at the end using *)
     - start_date: filter first_rx_time from this to end_date
     - end_date: filter first_rx time from start_date to this
+    - min_frame_count: minimum frame_count
 
     Returns a list of serials matching the parameters
     """
@@ -92,15 +94,20 @@ def search_sondes(
             pattern = serial[:-1] + '%'
         else:
             pattern = serial
-        sql += f" AND serial LIKE ?"
+        sql += " AND serial LIKE ?"
         params.append(pattern)
     
+    # Frame count filter
+    if min_frame_count:
+        sql += " And frame_count >= ?"
+        params.append(min_frame_count)
+
     # Date filters
     if start_date:
-        sql += f" AND first_rx_time >= ?"
+        sql += " AND first_rx_time >= ?"
         params.append(start_date)
     if end_date:
-        sql += f" AND first_rx_time <= ?"
+        sql += " AND first_rx_time <= ?"
         params.append(end_date)
 
     # Run query

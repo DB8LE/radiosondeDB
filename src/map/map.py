@@ -18,11 +18,12 @@ class Map(rsdb.web.WebApp):
         @self.app.callback(
             Output("map_iframe", "srcDoc"),
             State("input_serial", "value"),
+            State("input_min_frames", "value"),
             State("input_date_start", "date"),
             State("input_date_end", "date"),
             Input("button_search", "n_clicks")
         )
-        def update_map(serial, date_start, date_end, n_clicks):
+        def update_map(serial, min_frame_count, date_start, date_end, n_clicks):
             """Callback to update map"""
 
             # Only run if user has clicked the button
@@ -37,7 +38,7 @@ class Map(rsdb.web.WebApp):
 
                 # Perform search in DB
                 logging.debug("Searching database")
-                search_results = rsdb.database.search_sondes(cursor, serial, date_start, date_end)
+                search_results = rsdb.database.search_sondes(cursor, serial, min_frame_count, date_start, date_end)
                 logging.debug(f"Got {len(search_results)} results")
 
                 # Create map
@@ -49,6 +50,8 @@ class Map(rsdb.web.WebApp):
         
         # Prepare inputs
         input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
+        # TODO: seconds received might be better here?
+        input_min_frames = dcc.Input(id="input_min_frames", type="number", placeholder="Min. Frames", className="w-100", style={"height": "100%"})
         # FIXME: Date pickers look weird and sometimes don't scale properly, but I can't find a fix
         input_date_start = dcc.DatePickerSingle(id="input_date_start", placeholder="Start Date")
         input_date_end = dcc.DatePickerSingle(id="input_date_end", placeholder="End Date")
@@ -57,7 +60,8 @@ class Map(rsdb.web.WebApp):
         # Arrange inputs
         inputs = dbc.Container([
             dbc.Row([
-                dbc.Col(input_serial, width=9),
+                dbc.Col(input_serial, width=8),
+                dbc.Col(input_min_frames, width=1),
                 dbc.Col(input_date_start, width=1),
                 dbc.Col(input_date_end, width=1),
                 dbc.Col(button_search, width=1)
