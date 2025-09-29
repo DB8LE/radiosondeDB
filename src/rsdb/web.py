@@ -44,11 +44,13 @@ class WebApp(ABC):
         # Run dash app
         try:
             self.app.run(host="0.0.0.0", port=self.port)
+        except KeyboardInterrupt:
+            logging.info("Caught KeyboardInterrupt, shutting down")
         except Exception as e:
             logging.error(f"Got exception while running {self._app_name}: {e}")
             logging.info(traceback.format_exc())
-
-            # Close cursor
+        finally:
+            # Close database connection
             if self.db_conn:
                 self.db_conn.close()
 
