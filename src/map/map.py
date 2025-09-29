@@ -87,7 +87,7 @@ class Map(rsdb.web.WebApp):
             ], style={"flex": "1 1 auto", "overflow": "auto"})
         ], style={"height": "100vh", "display": "flex", "flexDirection": "column"})
         
-    def _make_map(self, cursor: mariadb.Cursor, serials: List[str] = []):
+    def _make_map(self, cursor: mariadb.Cursor, serials: List[str]):
         """Generate the map with data from the database"""
 
         logging.debug("Creating map")
@@ -95,28 +95,19 @@ class Map(rsdb.web.WebApp):
         # Get flight paths from DB
         logging.debug("Getting data from DB")
         start = time.time()
-        flight_paths = {}
-        for serial in serials:
-            flight_path = database.get_flight_path(cursor, serial)
-
-            if flight_path == []:
-                logging.error(f"Sonde {serial} has a meta table entry but none in tracking table.")
-            else:
-                flight_paths[serial] = flight_path
+        flight_paths = database.get_flight_paths(cursor, serials)
         logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         # Create map
         logging.debug("Drawing map")
         start = time.time()
-        if flight_paths != []:
-            map = folium.Map()
-            for serial, flight_path in flight_paths.items():
-                folium.PolyLine(flight_path,
-                                color=color.get_track_color(),
-                                tooltip=serial
-                ).add_to(map)
-        else:
-            map = folium.Map()
+        map = folium.Map()
+        for serial, flight_path in flight_paths.items():
+            polyline = folium.PolyLine(flight_path,
+                            color=color.get_track_color(),
+                            tooltip=serial
+            )
+            polyline.add_to(map)
         logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         return map
