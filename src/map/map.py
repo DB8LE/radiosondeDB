@@ -19,12 +19,13 @@ class Map(rsdb.web.WebApp):
             [Output("map_iframe", "srcDoc"),
             Output("flight_count", "children")],
             State("input_serial", "value"),
+            State("input_types", "value"),
             State("input_min_frames", "value"),
             State("input_date_start", "date"),
             State("input_date_end", "date"),
             Input("button_search", "n_clicks")
         )
-        def update_map(serial, min_frame_count, date_start, date_end, n_clicks):
+        def update_map(serial, types, min_frame_count, date_start, date_end, n_clicks):
             """Callback to update map"""
 
             # Only run if user has clicked the button
@@ -39,7 +40,7 @@ class Map(rsdb.web.WebApp):
 
                 # Perform search in DB
                 logging.debug("Searching database")
-                search_results = rsdb.database.search_sondes(cursor, serial, min_frame_count, date_start, date_end)
+                search_results = rsdb.database.search_sondes(cursor, serial, types, min_frame_count, date_start, date_end)
                 logging.debug(f"Got {len(search_results)} results")
 
                 # Create map
@@ -53,12 +54,25 @@ class Map(rsdb.web.WebApp):
                 flight_count_text = f"({round(map_processing_time, 1)}s) Showing {len(search_results)} flights"
 
                 return map, flight_count_text
-        
+            
+        # Get available types from DB
+        # TODO: this should update every once in a while without having to restart
+        cursor = self.db_conn.cursor()
+        available_sonde_types = database.get_sonde_types(cursor)
+        cursor.close()
+
         # Prepare inputs
         input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
+        # FIXME: This doesnt scale properly on small heights
+        input_types = dcc.Dropdown(id="input_types",
+                                   options=available_sonde_types,
+                                   multi=True,
+                                   searchable=False,
+                                   className="w-100",
+                                   style={"height": "5vh"}) # This refuses to scale with 100% height
         # TODO: seconds received might be better here?
         input_min_frames = dcc.Input(id="input_min_frames", type="number", placeholder="Min. Frames", className="w-100", style={"height": "100%"})
-        # FIXME: Date pickers look weird and sometimes don't scale properly, but I can't find a fix
+        # FIXME: Date pickers don't scale properly on small heights either
         input_date_start = dcc.DatePickerSingle(id="input_date_start", placeholder="Start Date")
         input_date_end = dcc.DatePickerSingle(id="input_date_end", placeholder="End Date")
         button_search = html.Button("Search", id="button_search", n_clicks=0, className="w-100", style={"height": "100%"})
@@ -66,7 +80,8 @@ class Map(rsdb.web.WebApp):
         # Arrange inputs
         inputs = dbc.Container([
             dbc.Row([
-                dbc.Col(input_serial, width=8),
+                dbc.Col(input_serial, width=6),
+                dbc.Col(input_types, width=2, style={"height": "5vh"}),
                 dbc.Col(input_min_frames, width=1),
                 dbc.Col(input_date_start, width=1),
                 dbc.Col(input_date_end, width=1),

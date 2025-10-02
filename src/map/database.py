@@ -22,3 +22,12 @@ def get_flight_paths(cursor: mariadb.Cursor, serials: List[str]) -> Dict[str, Li
         data[result[0]].append((float(result[1]), float(result[2])))
 
     return data
+
+def get_sonde_types(cursor: mariadb.Cursor) -> List[str]:
+    """Get a list of sonde types available in database"""
+
+    cursor.execute("SELECT DISTINCT sonde_type FROM meta;")
+
+    results = cursor.fetchall()
+
+    return [sonde_type[0] for sonde_type in results]
