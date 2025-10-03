@@ -62,7 +62,11 @@ class Map(rsdb.web.WebApp):
         cursor.close()
 
         # Prepare inputs
-        input_serial = dcc.Input(id="input_serial", type="text", placeholder="Serial", className="w-100", style={"height": "100%"})
+        input_serial = dcc.Input(id="input_serial",
+                                 type="text",
+                                 placeholder="Serial",
+                                 className="w-100",
+                                 style={"height": "100%"})
         # FIXME: This doesnt scale properly on small heights
         input_types = dcc.Dropdown(id="input_types",
                                    options=available_sonde_types,
@@ -71,11 +75,21 @@ class Map(rsdb.web.WebApp):
                                    className="w-100",
                                    style={"height": "5vh"}) # This refuses to scale with 100% height
         # TODO: seconds received might be better here?
-        input_min_frames = dcc.Input(id="input_min_frames", type="number", placeholder="Min. Frames", className="w-100", style={"height": "100%"})
+        input_min_frames = dcc.Input(id="input_min_frames",
+                                     type="number",
+                                     placeholder="Min. Frames",
+                                     className="w-100",
+                                     style={"height": "100%"})
         # FIXME: Date pickers don't scale properly on small heights either
-        input_date_start = dcc.DatePickerSingle(id="input_date_start", placeholder="Start Date")
-        input_date_end = dcc.DatePickerSingle(id="input_date_end", placeholder="End Date")
-        button_search = html.Button("Search", id="button_search", n_clicks=0, className="w-100", style={"height": "100%"})
+        input_date_start = dcc.DatePickerSingle(id="input_date_start",
+                                                placeholder="Start Date")
+        input_date_end = dcc.DatePickerSingle(id="input_date_end",
+                                              placeholder="End Date")
+        button_search = html.Button("Search",
+                                    id="button_search",
+                                    n_clicks=0,
+                                    className="w-100",
+                                    style={"height": "100%"})
 
         # Arrange inputs
         inputs = dbc.Container([
