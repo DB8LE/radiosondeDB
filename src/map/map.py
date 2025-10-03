@@ -1,8 +1,8 @@
 import src.rsdb as rsdb
 from src.rsdb.web import COLORS
-from . import database, color
+from . import database, color, launchsites
 
-import logging, time
+import logging, time, copy
 from datetime import date
 from typing import Dict, Any, List
 
@@ -13,6 +13,23 @@ from dash import html, dcc, Output, Input, State
 class Map(rsdb.web.WebApp):
     def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
         super().__init__(app_name, config, connection)
+
+        # Read launchsites
+        self.launchsites = launchsites.read_launchsites()
+
+        # Create empty map with launchsites plotted
+        self.empty_map = folium.Map()
+        for launchsite in self.launchsites:
+            folium.CircleMarker(
+                location=(launchsite[1], launchsite[2]),
+                radius=6,
+                color="black",
+                weight=2,
+                fill=True,
+                fill_opacity=0.1,
+                opacity=1,
+                tooltip=launchsite[0]
+            ).add_to(self.empty_map)
 
         # Set up map update callback
         @self.app.callback(
@@ -132,7 +149,7 @@ class Map(rsdb.web.WebApp):
         # Create map
         logging.debug("Drawing map")
         start = time.time()
-        map = folium.Map()
+        map = copy.deepcopy(self.empty_map)
         for serial, flight_path in flight_paths.items():
             polyline = folium.PolyLine(flight_path,
                             color=color.get_track_color(),

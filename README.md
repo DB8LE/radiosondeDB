@@ -99,3 +99,12 @@ pip install .
 # If using systemd service, restart it
 sudo systemctl restart rsdb-*
 ```
+
+## Launchsites
+
+Optionally, the positions of known radiosonde launch sites can be configured by the user to be displayed on the map.
+
+To configure these, simply create a a file named `launchsites.txt` in the project root directory, and edit it to set your
+launch sites in this format:
+
+`<Name>,<Latitude>,<Longitude>` (seperated by newlines)

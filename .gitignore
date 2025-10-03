@@ -175,3 +175,6 @@ cython_debug/
 
 # Actual config file
 config.toml
+
+# Launchsites file
+launchsites.txt
