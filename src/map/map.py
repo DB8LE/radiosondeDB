@@ -82,8 +82,10 @@ class Map(rsdb.web.WebApp):
                                      style={"height": "100%"})
         # FIXME: Date pickers don't scale properly on small heights either
         input_date_start = dcc.DatePickerSingle(id="input_date_start",
+                                                display_format="Y-M-D",
                                                 placeholder="Start Date")
         input_date_end = dcc.DatePickerSingle(id="input_date_end",
+                                              display_format="Y-M-D",
                                               placeholder="End Date")
         button_search = html.Button("Search",
                                     id="button_search",
