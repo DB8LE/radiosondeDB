@@ -144,6 +144,7 @@ class Map(rsdb.web.WebApp):
         logging.debug("Getting data from DB")
         start = time.time()
         flight_paths = database.get_flight_paths(cursor, serials)
+        flights_meta = database.get_flight_meta(cursor, serials)
         logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         # Create map
@@ -151,11 +152,54 @@ class Map(rsdb.web.WebApp):
         start = time.time()
         map = copy.deepcopy(self.empty_map)
         for serial, flight_path in flight_paths.items():
-            polyline = folium.PolyLine(flight_path,
-                            color=color.get_track_color(),
+            flight_color=color.get_track_color()
+
+            # Add flight line
+            folium.PolyLine(flight_path,
+                            color=flight_color,
                             tooltip=serial
-            )
-            polyline.add_to(map)
+            ).add_to(map)
+
+            # Add dots for first receive and last receive
+            meta = flights_meta[serial]
+            first_rx = meta[0]
+            last_rx = meta[1]
+            burst = meta[2]
+
+            folium.CircleMarker(
+                location=(first_rx[1], first_rx[2]),
+                radius=3,
+                color=flight_color,
+                weight=3,
+                fill=True,
+                fill_opacity=1,
+                opacity=1,
+                tooltip=f"first receive @ {first_rx[3]}m on {first_rx[0].strftime("%Y-%m-%d %H:%M:%S")}"
+            ).add_to(map)
+
+            folium.CircleMarker(
+                location=(last_rx[1], last_rx[2]),
+                radius=3,
+                color=flight_color,
+                weight=3,
+                fill=True,
+                fill_opacity=1,
+                opacity=1,
+                tooltip=f"last receive @ {last_rx[3]}m on {last_rx[0].strftime("%Y-%m-%d %H:%M:%S")}"
+            ).add_to(map)
+
+            if burst is not None:
+                folium.CircleMarker(
+                    location=(burst[1], burst[2]),
+                    radius=4,
+                    color=flight_color,
+                    weight=3,
+                    fill=True,
+                    fill_opacity=1,
+                    opacity=1,
+                    tooltip=f"last receive @ {burst[3]}m on {burst[0].strftime("%Y-%m-%d %H:%M:%S")}"
+                ).add_to(map)
+
         logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
         return map
