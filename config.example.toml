@@ -43,3 +43,7 @@ bottom_right_graph = "week_frame_count"
 
 [map]
 port = 55671 # Port for the map
+poi_max_results = 500 # Maxium number of results to stop showing the POI dots
+                      # for first rx, last rx and burst.
+                      # This doesn't really help the server, but takes a lot of load
+                      # off of the client.

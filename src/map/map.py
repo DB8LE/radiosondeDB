@@ -14,6 +14,8 @@ class Map(rsdb.web.WebApp):
     def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
         super().__init__(app_name, config, connection)
 
+        self.poi_max_results = config["poi_max_results"]
+
         # Read launchsites
         self.launchsites = launchsites.read_launchsites()
 
@@ -151,6 +153,7 @@ class Map(rsdb.web.WebApp):
         logging.debug("Drawing map")
         start = time.time()
         map = copy.deepcopy(self.empty_map)
+        skip_poi_dots = len(serials) >= self.poi_max_results
         for serial, flight_path in flight_paths.items():
             flight_color=color.get_track_color()
 
@@ -159,6 +162,10 @@ class Map(rsdb.web.WebApp):
                             color=flight_color,
                             tooltip=serial
             ).add_to(map)
+
+            # Skip plotting the POI dots if there are too many results
+            if skip_poi_dots:
+                continue
 
             # Add dots for first receive and last receive
             meta = flights_meta[serial]
