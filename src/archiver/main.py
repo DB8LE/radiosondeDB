@@ -1,7 +1,11 @@
+import logging
+import socket
+import traceback
+
 import src.rsdb as rsdb
+
 from . import tracking
 
-import logging, socket, traceback
 
 def main():
     rsdb.logging.set_up_logging("rsdb-archiver") # Set up logging

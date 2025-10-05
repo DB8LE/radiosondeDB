@@ -1,5 +1,7 @@
 import src.rsdb as rsdb
+
 from . import dashboard
+
 
 def main():
     rsdb.logging.set_up_logging("rsdb-dashboard") # Set up logging

@@ -1,8 +1,9 @@
+from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
-from collections import defaultdict
 
 import mariadb
+
 
 def get_sonde_count(cursor: mariadb.Cursor) -> int:
     """Get amount of sondes in the database"""

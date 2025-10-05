@@ -1,11 +1,15 @@
-import src.rsdb as rsdb
-from . import database
-
-import logging, traceback
+import logging
+import traceback
 from datetime import datetime, timezone
 from typing import Dict
 
-import mariadb, geopy.distance
+import geopy.distance
+import mariadb
+
+import src.rsdb as rsdb
+
+from . import database
+
 
 class SondeTracker():
     """Process payload summaries received by radiosonde_auto_rx for a specific sonde"""

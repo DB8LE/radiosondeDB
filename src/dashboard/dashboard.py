@@ -1,13 +1,15 @@
+import logging
+from typing import Any, Dict
+
+import dash_bootstrap_components as dbc
+import mariadb
+from dash import dcc, html
+
 import src.rsdb as rsdb
 from src.rsdb.web import COLORS
+
 from . import database, graphs
 
-import logging
-from typing import Dict, Any
-
-import mariadb
-import dash_bootstrap_components as dbc
-from dash import html, dcc
 
 def get_graph_from_name(graph_name: str, cursor: mariadb.Cursor) -> graphs.DashboardGraph:
     """Get a graph class from a graph name. Requires a cursor to initialize the graph class with."""

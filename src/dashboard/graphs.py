@@ -1,11 +1,12 @@
-from . import database
-
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 import mariadb
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+from . import database
+
 
 # Base graph class
 class DashboardGraph(ABC):

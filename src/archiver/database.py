@@ -1,10 +1,11 @@
-import src.rsdb as rsdb
-
 import logging
 from typing import Dict
 
-import mariadb
 import geopy.distance
+import mariadb
+
+import src.rsdb as rsdb
+
 
 def add_to_meta(cursor: mariadb.Cursor, first_packet: rsdb.Packet, burst_packet: None | rsdb.Packet, latest_packet: rsdb.Packet, frame_count: int):
     """Add a flight to the metadata table by its first packet, last packet and optionally burst packet"""

@@ -1,8 +1,9 @@
-from datetime import datetime
 from collections import defaultdict
-from typing import Dict, List, Tuple, Optional
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
 
 import mariadb
+
 
 def get_flight_paths(cursor: mariadb.Cursor, serials: List[str]) -> Dict[str, List[Tuple[float, float]]]:
     """

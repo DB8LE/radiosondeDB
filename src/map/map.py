@@ -1,14 +1,19 @@
+import copy
+import logging
+import time
+from datetime import date
+from typing import Any, Dict, List
+
+import dash_bootstrap_components as dbc
+import folium
+import mariadb
+from dash import Input, Output, State, dcc, html
+
 import src.rsdb as rsdb
 from src.rsdb.web import COLORS
-from . import database, color, launchsites
 
-import logging, time, copy
-from datetime import date
-from typing import Dict, Any, List
+from . import color, database, launchsites
 
-import folium, mariadb
-import dash_bootstrap_components as dbc
-from dash import html, dcc, Output, Input, State
 
 class Map(rsdb.web.WebApp):
     def __init__(self, app_name: str,

@@ -1,5 +1,6 @@
-import logging, datetime
-from typing import Dict, Any, Optional, List
+import datetime
+import logging
+from typing import Any, Dict, List, Optional
 
 import mariadb
 

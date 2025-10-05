@@ -1,5 +1,8 @@
-import logging, platform, sys
-from typing import Dict, Any
+import logging
+import platform
+import sys
+from typing import Any, Dict
+
 
 class CustomFormatter(logging.Formatter):
     """

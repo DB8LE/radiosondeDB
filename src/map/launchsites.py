@@ -1,5 +1,7 @@
-import os, logging
+import logging
+import os
 from typing import List, Tuple
+
 
 def read_launchsites() -> List[Tuple[str, float, float]]:
     """Read the launchsites file in the current directory and return list of name, lat and lon"""

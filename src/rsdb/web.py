@@ -1,6 +1,9 @@
-import logging, os, traceback, re
+import logging
+import os
+import re
+import traceback
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 import mariadb
 from dash import Dash, html

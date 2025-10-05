@@ -1,6 +1,8 @@
-from typing import Dict, Set, Any
+import logging
+import os
+from typing import Any, Dict, Set
 
-import tomllib, logging, os
+import tomllib
 
 _config_data: dict = {} # internal variable to store read config data
 
