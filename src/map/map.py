@@ -19,8 +19,12 @@ class Map(rsdb.web.WebApp):
         # Read launchsites
         self.launchsites = launchsites.read_launchsites()
 
-        # Create empty map with launchsites plotted
+        # Create empty map
+        # TODO: add custom tile server option
         self.empty_map = folium.Map()
+
+        # Create copy of empty map with launchsites
+        self.launchsites_map = copy.deepcopy(self.empty_map)
         for launchsite in self.launchsites:
             folium.CircleMarker(
                 location=(launchsite[1], launchsite[2]),
@@ -31,7 +35,7 @@ class Map(rsdb.web.WebApp):
                 fill_opacity=0.1,
                 opacity=1,
                 tooltip=launchsite[0]
-            ).add_to(self.empty_map)
+            ).add_to(self.launchsites_map)
 
         # Set up map update callback
         @self.app.callback(
@@ -62,17 +66,20 @@ class Map(rsdb.web.WebApp):
                 search_results = rsdb.database.search_sondes(cursor, serial, types, min_frame_count, date_start, date_end)
                 logging.debug(f"Got {len(search_results)} results")
 
-                # Create map
+                # If there are results, create map. If not, return empty map
                 map_start_time = time.time()
-                map = self._make_map(cursor, search_results).get_root().render()
+                if len(search_results) > 0:
+                    # Create map
+                    map = self._make_map(cursor, search_results)
+                else:
+                    map = self.empty_map
                 map_processing_time = time.time() - map_start_time
-
                 cursor.close()
 
                 # Create text for flight count map overlay
                 flight_count_text = f"({round(map_processing_time, 1)}s) Showing {len(search_results)} flights"
 
-                return map, flight_count_text
+                return map.get_root().render(), flight_count_text
             
         # Get available types from DB
         # TODO: this should update every once in a while without having to restart
@@ -130,7 +137,7 @@ class Map(rsdb.web.WebApp):
             html.Div([
                 html.Iframe(
                     id="map_iframe",
-                    srcDoc=folium.Map().get_root().render(),
+                    srcDoc=self.empty_map.get_root().render(),
                     style={"width": "100%", "height": "100%"}
                 ),
                 html.Div("(0.0s) Showing 0 flights", id="flight_count", className="overlay-text")
@@ -152,7 +159,7 @@ class Map(rsdb.web.WebApp):
         # Create map
         logging.debug("Drawing map")
         start = time.time()
-        map = copy.deepcopy(self.empty_map)
+        map = copy.deepcopy(self.launchsites_map)
         skip_poi_dots = len(serials) >= self.poi_max_results
         for serial, flight_path in flight_paths.items():
             flight_color=color.get_track_color()
