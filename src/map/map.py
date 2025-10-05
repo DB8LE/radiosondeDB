@@ -204,7 +204,7 @@ class Map(rsdb.web.WebApp):
                     fill=True,
                     fill_opacity=1,
                     opacity=1,
-                    tooltip=f"last receive @ {burst[3]}m on {burst[0].strftime("%Y-%m-%d %H:%M:%S")}"
+                    tooltip=f"burst @ {burst[3]}m on {burst[0].strftime("%Y-%m-%d %H:%M:%S")}"
                 ).add_to(map)
         
         # Automatically zoom to fit all elements
