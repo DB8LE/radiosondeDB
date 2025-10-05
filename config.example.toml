@@ -17,6 +17,7 @@ database = "sondes" # Database name in MariaDB
 [autorx]
 port = 55673 # UDP port that autorx sends its payload summaries to
 
+
 # Application specific settings
 [archiver]
 min_seconds_per_frame = 5 # Minimum seconds per frame to be stored to the DB. Note:
@@ -47,3 +48,15 @@ poi_max_results = 500 # Maxium number of results to stop showing the POI dots
                       # for first rx, last rx and burst.
                       # This doesn't really help the server, but takes a lot of load
                       # off of the client.
+
+
+
+# Advanced settings
+[maptiles]
+url = "https://tile.openstreetmap.org/{z}/{x}/{y}.png" # Tile server URL.
+                                                       # Check https://leafletjs.com/reference.html#tilelayer
+                                                       # for detail about the format
+attribution = "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors" # Attribution text
+min_zoom = 0 # Minimum maptile zoom
+max_zoom = 14 # Maximum maptile zoom
+

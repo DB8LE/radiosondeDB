@@ -11,17 +11,23 @@ import dash_bootstrap_components as dbc
 from dash import html, dcc, Output, Input, State
 
 class Map(rsdb.web.WebApp):
-    def __init__(self, app_name: str, config: Dict[str, Any], connection: mariadb.Connection) -> None:
-        super().__init__(app_name, config, connection)
+    def __init__(self, app_name: str,
+                 map_config: Dict[str, Any],
+                 maptiles_config: Dict[str, Any],
+                 connection: mariadb.Connection) -> None:
+        super().__init__(app_name, map_config, connection)
 
-        self.poi_max_results = config["poi_max_results"]
+        self.poi_max_results = map_config["poi_max_results"]
 
         # Read launchsites
         self.launchsites = launchsites.read_launchsites()
 
         # Create empty map
-        # TODO: add custom tile server option
-        self.empty_map = folium.Map()
+        tiles = folium.TileLayer(tiles=maptiles_config["url"],
+                                 attr=maptiles_config["attribution"],
+                                 min_zoom=maptiles_config["min_zoom"],
+                                 max_zoom=maptiles_config["max_zoom"])
+        self.empty_map = folium.Map(tiles=tiles)
 
         # Create copy of empty map with launchsites
         self.launchsites_map = copy.deepcopy(self.empty_map)
