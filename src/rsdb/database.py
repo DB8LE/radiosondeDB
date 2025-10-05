@@ -87,7 +87,7 @@ def search_sondes(
 
     Returns a list of serials matching the parameters
     """
-    sql = f"SELECT serial FROM meta WHERE 1=1 "
+    sql = "SELECT serial FROM meta WHERE 1=1 "
     params: List[Any] = []
     
     # Serial filter

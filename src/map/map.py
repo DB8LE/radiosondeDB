@@ -194,7 +194,7 @@ class Map(rsdb.web.WebApp):
                 fill=True,
                 fill_opacity=1,
                 opacity=1,
-                tooltip=f"first receive @ {first_rx[3]}m on {first_rx[0].strftime("%Y-%m-%d %H:%M:%S")}"
+                tooltip=f"first receive @ {first_rx[3]}m on {first_rx[0].strftime('%Y-%m-%d %H:%M:%S')}"
             ).add_to(map)
 
             folium.CircleMarker(
@@ -205,7 +205,7 @@ class Map(rsdb.web.WebApp):
                 fill=True,
                 fill_opacity=1,
                 opacity=1,
-                tooltip=f"last receive @ {last_rx[3]}m on {last_rx[0].strftime("%Y-%m-%d %H:%M:%S")}"
+                tooltip=f"last receive @ {last_rx[3]}m on {last_rx[0].strftime('%Y-%m-%d %H:%M:%S')}"
             ).add_to(map)
 
             if burst is not None:
@@ -217,7 +217,7 @@ class Map(rsdb.web.WebApp):
                     fill=True,
                     fill_opacity=1,
                     opacity=1,
-                    tooltip=f"burst @ {burst[3]}m on {burst[0].strftime("%Y-%m-%d %H:%M:%S")}"
+                    tooltip=f"burst @ {burst[3]}m on {burst[0].strftime('%Y-%m-%d %H:%M:%S')}"
                 ).add_to(map)
         
         # Automatically zoom to fit all elements
