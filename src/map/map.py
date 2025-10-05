@@ -206,6 +206,9 @@ class Map(rsdb.web.WebApp):
                     opacity=1,
                     tooltip=f"last receive @ {burst[3]}m on {burst[0].strftime("%Y-%m-%d %H:%M:%S")}"
                 ).add_to(map)
+        
+        # Automatically zoom to fit all elements
+        folium.FitOverlays(max_zoom=8).add_to(map)
 
         logging.debug(f"Done in {round(time.time()-start, 2)}s")
 
