@@ -53,13 +53,20 @@ class Map(rsdb.web.WebApp):
             [Output("map_iframe", "srcDoc"),
             Output("flight_count", "children")],
             State("input_serial", "value"),
+            State("input_data_fields", "value"),
             State("input_types", "value"),
             State("input_min_frames", "value"),
             State("input_date_start", "date"),
             State("input_date_end", "date"),
             Input("button_search", "n_clicks")
         )
-        def update_map(serial, types, min_frame_count, date_start, date_end, n_clicks):
+        def update_map(serial,
+                       data_fields,
+                       types,
+                       min_frame_count,
+                       date_start, 
+                       date_end, 
+                       n_clicks):
             """Callback to update map"""
 
             # Only run if user has clicked the button
@@ -74,7 +81,15 @@ class Map(rsdb.web.WebApp):
 
                 # Perform search in DB
                 logging.debug("Searching database")
-                search_results = rsdb.database.search_sondes(cursor, serial, types, min_frame_count, date_start, date_end)
+                search_results = rsdb.database.search_sondes(
+                        cursor,
+                        serial,
+                        data_fields,
+                        types,
+                        min_frame_count,
+                        date_start,
+                        date_end
+                )
                 logging.debug(f"Got {len(search_results)} results")
 
                 # If there are results, create map. If not, return empty map
@@ -104,9 +119,18 @@ class Map(rsdb.web.WebApp):
                                  placeholder="Serial",
                                  className="w-100",
                                  style={"height": "100%"})
-        # FIXME: This doesnt scale properly on small heights
+        # FIXME: Dropdowns don't scale properly on small heights
+        data_field_options = ["humidity", "pressure", "XDATA"]
+        input_data_fields = dcc.Dropdown(id="input_data_fields",
+                                   options=data_field_options,
+                                   placeholder="Data Fields",
+                                   multi=True,
+                                   searchable=False,
+                                   className="w-100",
+                                   style={"height": "5vh"}) # This refuses to scale with 100% height
         input_types = dcc.Dropdown(id="input_types",
                                    options=available_sonde_types,
+                                   placeholder="Sonde Types",
                                    multi=True,
                                    searchable=False,
                                    className="w-100",
@@ -133,7 +157,8 @@ class Map(rsdb.web.WebApp):
         # Arrange inputs
         inputs = dbc.Container([
             dbc.Row([
-                dbc.Col(input_serial, width=6),
+                dbc.Col(input_serial, width=4),
+                dbc.Col(input_data_fields, width=2, style={"height": "5vh"}),
                 dbc.Col(input_types, width=2, style={"height": "5vh"}),
                 dbc.Col(input_min_frames, width=1),
                 dbc.Col(input_date_start, width=1),

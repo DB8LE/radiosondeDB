@@ -1,6 +1,6 @@
 import datetime
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Literal
 
 import mariadb
 
@@ -71,7 +71,8 @@ def connect(config: Dict[str, Dict[str, Any]]) -> mariadb.Connection:
 def search_sondes(
     cursor: mariadb.Cursor,
     serial: Optional[str] = None,
-    types: Optional[List[str]] = None,
+    data_fields: Optional[List[str]] = None,
+    types: Optional[List[Literal["humidity", "pressure", "XDATA"]]] = None,
     min_frame_count: Optional[int] = None,
     start_date: Optional[datetime.date] = None,
     end_date: Optional[datetime.date] = None
@@ -81,6 +82,7 @@ def search_sondes(
 
     Search parameters:
     - serial: (with optional wildcard at the end using *)
+    - data_fields: data fields that have to be available in flight data
     - types: filter allowed sonde types
     - min_frame_count: minimum frame_count
     - start_date: filter first_rx_time from this to end_date
@@ -88,7 +90,7 @@ def search_sondes(
 
     Returns a list of serials matching the parameters
     """
-    sql = "SELECT serial FROM meta WHERE 1=1 "
+    sql = "SELECT serial FROM meta WHERE 1=1"
     params: List[Any] = []
     
     # Serial filter
@@ -100,10 +102,14 @@ def search_sondes(
         sql += " AND serial LIKE ?"
         params.append(pattern)
 
+    if data_fields:
+        for data_field in data_fields:
+            sql += f" AND has_{data_field.lower()} = 1"
+
     # Types filter
     if types:
         placeholders = ", ".join(["?"] * len(types))
-        sql += f"AND sonde_type IN ({placeholders})"
+        sql += f" AND sonde_type IN ({placeholders})"
         params.extend(types)
     
     # Frame count filter
