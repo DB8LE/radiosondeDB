@@ -74,8 +74,8 @@ def search_sondes(
     data_fields: Optional[List[str]] = None,
     types: Optional[List[Literal["humidity", "pressure", "XDATA"]]] = None,
     min_frame_count: Optional[int] = None,
-    start_date: Optional[datetime.date] = None,
-    end_date: Optional[datetime.date] = None
+    date_start: Optional[datetime.date] = None,
+    date_end: Optional[datetime.date] = None
 ) -> List[str]:
     """
     Search for sondes in the meta table.
@@ -118,12 +118,12 @@ def search_sondes(
         params.append(min_frame_count)
 
     # Date filters
-    if start_date:
+    if date_start:
         sql += " AND first_rx_time >= ?"
-        params.append(start_date)
-    if end_date:
+        params.append(date_start)
+    if date_end:
         sql += " AND first_rx_time <= ?"
-        params.append(end_date)
+        params.append(date_end)
 
     # Run query
     cursor.execute(sql, params)

@@ -114,45 +114,65 @@ class Map(rsdb.web.WebApp):
         cursor.close()
 
         # Prepare inputs
-        input_serial = dcc.Input(id="input_serial",
-                                 type="text",
-                                 placeholder="Serial",
-                                 className="w-100",
-                                 style={"height": "100%"})
+        input_serial = dcc.Input(
+            id="input_serial",
+            type="text",
+            placeholder="Serial",
+            className="w-100",
+            style={"height": "100%"}
+        )
+        
         # FIXME: Dropdowns don't scale properly on small heights
         data_field_options = ["humidity", "pressure", "XDATA"]
-        input_data_fields = dcc.Dropdown(id="input_data_fields",
-                                   options=data_field_options,
-                                   placeholder="Data Fields",
-                                   multi=True,
-                                   searchable=False,
-                                   className="w-100",
-                                   style={"height": "5vh"}) # This refuses to scale with 100% height
-        input_types = dcc.Dropdown(id="input_types",
-                                   options=available_sonde_types,
-                                   placeholder="Sonde Types",
-                                   multi=True,
-                                   searchable=False,
-                                   className="w-100",
-                                   style={"height": "5vh"}) # This refuses to scale with 100% height
+        input_data_fields = dcc.Dropdown(
+            id="input_data_fields",
+            options=data_field_options,
+            placeholder="Data Fields",
+            multi=True,
+            searchable=False,
+            className="w-100",
+            style={"height": "5vh"}
+        ) # This refuses to scale with 100% height
+
+        input_types = dcc.Dropdown(
+            id="input_types",
+            options=available_sonde_types,
+            placeholder="Sonde Types",
+            multi=True,
+            searchable=False,
+            className="w-100",
+            style={"height": "5vh"}
+        ) # This refuses to scale with 100% height
+
         # TODO: seconds received might be better here?
-        input_min_frames = dcc.Input(id="input_min_frames",
-                                     type="number",
-                                     placeholder="Min. Frames",
-                                     className="w-100",
-                                     style={"height": "100%"})
+        input_min_frames = dcc.Input(
+            id="input_min_frames",
+            type="number",
+            placeholder="Min. Frames",
+            className="w-100",
+            style={"height": "100%"}
+        )
+
         # FIXME: Date pickers don't scale properly on small heights either
-        input_date_start = dcc.DatePickerSingle(id="input_date_start",
-                                                display_format="Y-M-D",
-                                                placeholder="Start Date")
-        input_date_end = dcc.DatePickerSingle(id="input_date_end",
-                                              display_format="Y-M-D",
-                                              placeholder="End Date")
-        button_search = html.Button("Search",
-                                    id="button_search",
-                                    n_clicks=0,
-                                    className="w-100",
-                                    style={"height": "100%"})
+        input_date_start = dcc.DatePickerSingle(
+            id="input_date_start",
+            display_format="Y-M-D",
+            placeholder="Start Date"
+        )
+
+        input_date_end = dcc.DatePickerSingle(
+            id="input_date_end",
+            display_format="Y-M-D",
+            placeholder="End Date"
+        )
+
+        button_search = html.Button(
+            "Search",
+            id="button_search",
+            n_clicks=0,
+            className="w-100",
+            style={"height": "100%"}
+        )
 
         # Arrange inputs
         inputs = dbc.Container([
