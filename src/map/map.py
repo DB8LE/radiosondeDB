@@ -55,7 +55,10 @@ class Map(rsdb.web.WebApp):
                                  min_zoom=maptiles_config["min_zoom"],
                                  max_zoom=maptiles_config["max_zoom"])
         self.empty_map = folium.Map(tiles=tiles)
-        self._cache_folium_dependencies(self.empty_map)
+        
+        # If enabled, cache folium dependencies
+        if map_config["download_dependencies"] == True:
+            self._cache_folium_dependencies(self.empty_map)
 
         # Create copy of empty map with launchsites
         self.launchsites_map = copy.deepcopy(self.empty_map)
@@ -235,6 +238,7 @@ class Map(rsdb.web.WebApp):
         # Check for internet connection
         if not is_connected():
             logging.warning("No internet connection. Can't check folium dependencies.")
+            return
 
         # Attempt to download dependencies
         dependency_filenames = []

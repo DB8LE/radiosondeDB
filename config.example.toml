@@ -48,7 +48,10 @@ poi_max_results = 500 # Maxium number of results to stop showing the POI dots
                       # for first rx, last rx and burst.
                       # This doesn't really help the server, but takes a lot of load
                       # off of the client.
-
+download_dependencies = false # Wether to download JS and CSS dependencies to local storage.
+                              # If this is set to false, an internet connection will be required to use map.
+                              # Unless you have a selfhosted maptile server, there is no point in turning this on,
+                              # as the maptiles need an internet connection anyway.
 
 
 # Advanced settings
