@@ -1,8 +1,12 @@
 import copy
+import hashlib
 import logging
+import os
+import requests
+import socket
 import time
 from datetime import date
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple, Literal
 
 import dash_bootstrap_components as dbc
 import folium
@@ -14,6 +18,24 @@ from src.rsdb.web import COLORS
 
 from . import color, database, launchsites
 
+# Silence requests debug logs
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+CONNECTION_CHECK_HOSTNAME = "one.one.one.one"
+def is_connected() -> bool:
+    """Check if there is a working internet connection"""
+
+    try:
+        # Check if DNS is reachable
+        host = socket.gethostbyname(CONNECTION_CHECK_HOSTNAME)
+
+        # Try to connect to host
+        s = socket.create_connection((host, 80), 2)
+        s.close()
+
+        return True
+    except Exception:
+        return False
 
 class Map(rsdb.web.WebApp):
     def __init__(self, app_name: str,
@@ -33,6 +55,7 @@ class Map(rsdb.web.WebApp):
                                  min_zoom=maptiles_config["min_zoom"],
                                  max_zoom=maptiles_config["max_zoom"])
         self.empty_map = folium.Map(tiles=tiles)
+        self._cache_folium_dependencies(self.empty_map)
 
         # Create copy of empty map with launchsites
         self.launchsites_map = copy.deepcopy(self.empty_map)
@@ -200,6 +223,72 @@ class Map(rsdb.web.WebApp):
             ], style={"flex": "1 1 auto", "overflow": "auto"})
         ], style={"height": "100vh", "display": "flex", "flexDirection": "column"})
         
+    def _cache_folium_dependencies(self, map: folium.Map):
+        """Download required js and css dependencies of a folium map to local storage"""
+
+        logging.info("Caching folium dependencies")
+
+        # Ensure library path exists
+        lib_path = os.path.join(os.getcwd(), "./assets/map/lib")
+        os.makedirs(lib_path, exist_ok=True)
+
+        # Check for internet connection
+        if not is_connected():
+            logging.warning("No internet connection. Can't check folium dependencies.")
+
+        # Attempt to download dependencies
+        dependency_filenames = []
+        def _download_deps(dependencies: List[Tuple[str, str]], type: Literal["js", "css"]):
+            for name, url in dependencies:
+                filename = url.split("/")[-1]
+
+                # Download file
+                try:
+                    request = requests.get(url)
+                    request.raise_for_status()
+                except (requests.Timeout, requests.HTTPError) as e:
+                    logging.warning(f"Failed to download folium dependency {name}: {e}")
+                    continue
+
+                # Add hash to filename to redownload if changes happened to content but not name
+                file_hash = hashlib.sha256(request.content).hexdigest()
+                filename = file_hash+"-"+filename
+                dependency_filenames.append(filename)
+                dependency_path = os.path.join(lib_path, filename)
+
+                # Check if dependency is already downloaded
+                if os.path.exists(dependency_path):
+                    logging.debug(f"Folium dependency {name} is already downloaded")
+                    continue
+                
+                # Write file
+                with open(dependency_path, "wb") as f:
+                    f.write(request.content)
+
+                # Add file location to map
+                if type == "js":
+                    map.add_js_link(name, dependency_path)
+                else:
+                    map.add_css_link(name, dependency_path)
+
+                logging.debug(f"Downloaded folium dependency {name}")
+        
+        _download_deps(map.default_js, "js")
+        _download_deps(map.default_css, "css")
+    
+        # Delete dependencies that are no longer required
+        lib_files = os.listdir(lib_path)
+        old_files = list(set(lib_files) - set(dependency_filenames))
+
+        if len(old_files) == 0:
+            logging.debug("No extra folium depencies that need to be removed")
+            return
+        
+        logging.debug(f"Removing old files in dependency folder: {old_files}")
+        for file in old_files:
+            path = os.path.join(lib_path, file)
+            os.remove(path)
+
     def _make_map(self, cursor: mariadb.Cursor, serials: List[str]):
         """Generate the map with data from the database"""
 
