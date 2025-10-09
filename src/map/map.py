@@ -107,6 +107,7 @@ class Map(rsdb.web.WebApp):
 
                 # Perform search in DB
                 logging.debug("Searching database")
+                map_start_time = time.time()
                 search_results = rsdb.database.search_sondes(
                         cursor,
                         serial,
@@ -118,8 +119,7 @@ class Map(rsdb.web.WebApp):
                 )
                 logging.debug(f"Got {len(search_results)} results")
 
-                # If there are results, create map. If not, return empty map
-                map_start_time = time.time()
+                # If there are results, create map. If not, return empty map;
                 if len(search_results) > 0:
                     # Create map
                     map = self._make_map(cursor, search_results)
