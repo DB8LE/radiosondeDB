@@ -242,7 +242,7 @@ class Map(rsdb.web.WebApp):
 
         # Attempt to download dependencies
         dependency_filenames = []
-        def _download_deps(dependencies: List[Tuple[str, str]], type: Literal["js", "css"]):
+        def _download_deps(dependencies: List[Tuple[str, str]], dep_type: Literal["js", "css"]):
             for name, url in dependencies:
                 filename = url.split("/")[-1]
 
@@ -263,23 +263,23 @@ class Map(rsdb.web.WebApp):
                 # Check if dependency is already downloaded
                 if os.path.exists(dependency_path):
                     logging.debug(f"Folium dependency {name} is already downloaded")
-                    continue
-                
-                # Write file
-                with open(dependency_path, "wb") as f:
-                    f.write(request.content)
+                else:
+                    # Write file
+                    with open(dependency_path, "wb") as f:
+                        f.write(request.content)
 
                 # Add file location to map
-                if type == "js":
-                    map.add_js_link(name, dependency_path)
+                short_dependency_path = os.path.join("/assets/map/lib", filename)
+                if dep_type == "js":
+                    map.add_js_link(name, short_dependency_path)
                 else:
-                    map.add_css_link(name, dependency_path)
+                    map.add_css_link(name, short_dependency_path)
 
                 logging.debug(f"Downloaded folium dependency {name}")
         
         _download_deps(map.default_js, "js")
         _download_deps(map.default_css, "css")
-    
+
         # Delete dependencies that are no longer required
         lib_files = os.listdir(lib_path)
         old_files = list(set(lib_files) - set(dependency_filenames))
