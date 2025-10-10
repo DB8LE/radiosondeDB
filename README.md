@@ -24,6 +24,21 @@ If you want data like the rs41 mainboard or firmware version, you need to slight
 If you're running an older version (before v1.8.0), you will also need to do this to get pressure and XDATA values.
 In the file `radiosonde_auto_rx/auto_rx/autorx/ozimux.py`, look for the list `EXTRA_FIELDS` and ensure the list contains these strings: `"pressure", "aux", "rs41_mainboard", "rs41_mainboard_fw"`.
 
+### MariaDB setup
+
+If you haven't got mariadb set up yet, you will need to start by installing `mariadb-server` using your package manager,
+and then running `sudo mysql_secure_installation`.
+
+Once MariaDB is set up, run `sudo mysql -u root -p` to log in as root. In the MariaDB monitor, run these commands:
+
+```sql
+CREATE DATABASE sondes; -- Database name doesn't matter, just make sure to set it in config
+CREATE USER '<username>'@'localhost' IDENTIFIED BY '<password>'; -- if RSDB is not running on the same device as mariadb,
+                                                                 -- replace 'localhost' with '%'.
+GRANT ALL PRIVILEGES ON sondes.* TO '<username>'@'localhost';
+FLUSH PRIVILEGES;
+```
+
 ### Initial setup
 
 These commands need to be run once regardless of the app that will be installed.
