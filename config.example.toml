@@ -15,6 +15,7 @@ port = 3306 # MariaDB port. This is 3306 unless you've manually changed it
 database = "sondes" # Database name in MariaDB
 
 [autorx]
+host = "" # Host running autorx. Leave blank if autorx is set to broadcast
 port = 55673 # UDP port that autorx sends its payload summaries to
 
 

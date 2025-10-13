@@ -27,7 +27,7 @@ def main():
     database = rsdb.database.connect(config)
 
     # Set up main listener
-    logging.info(f"Starting AutoRX UDP listener on port {config['autorx']['port']}")
+    logging.info(f"Starting AutoRX UDP listener on {config['autorx']['host']}:{config['autorx']['port']}")
     udp_socket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     udp_socket.settimeout(1)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -37,7 +37,7 @@ def main():
         pass
 
     # Start listening and enter main loop
-    udp_socket.bind(("", config["autorx"]["port"]))
+    udp_socket.bind((config["autorx"]["host"], config["autorx"]["port"]))
     try:
         while True:
             try: # Got data, update sondes and timeouts
