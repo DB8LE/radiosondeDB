@@ -58,9 +58,10 @@ def connect(config: Dict[str, Dict[str, Any]]) -> mariadb.Connection:
     # Get connection
     logging.info("Connecting to MariaDB")
     conn = mariadb.connect(**config["mariadb"])
-    cursor = conn.cursor()
+    conn.auto_reconnect = True
 
     # Ensure tables exist
+    cursor = conn.cursor()
     logging.debug("Ensuring MariaDB tables exist")
     cursor.execute(CREATE_TRACKING_SQL)
     cursor.execute(CREATE_META_SQL)
